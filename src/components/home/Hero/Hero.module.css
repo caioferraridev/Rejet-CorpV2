@@ -1,0 +1,65 @@
+.hero-section{
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.hero-content{
+  padding: 10px 4px;
+}
+
+.hero-badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(168, 198, 134, 0.18);
+  border: 1px solid rgba(168, 198, 134, 0.24);
+  color: #4e6840;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.hero-content h1{
+  font-size: 48px;
+  line-height: 1.1;
+  color: var(--color-text);
+  margin-bottom: 18px;
+  max-width: 700px;
+}
+
+.hero-content p{
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--color-text-soft);
+  max-width: 670px;
+  margin-bottom: 24px;
+}
+
+.hero-points{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hero-point{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.hero-point svg{
+    color:#5d9f6c;
+    font-size:20px;
+}
+
+.loginArea{
+    width:100%;
+    max-width:440px;
+    margin-left:auto;
+}
