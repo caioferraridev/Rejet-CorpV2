@@ -1,0 +1,103 @@
+.hero {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 90px auto 20px;
+  padding: 0 20px;
+}
+
+.carousel {
+  width: 100%;
+  height: 420px;
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(var(--radius-lg) + 8px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 248, 255, 0.7));
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 24px 45px rgba(0, 0, 0, 0.15);
+}
+
+.carousel img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.carousel img.active {
+  opacity: 1;
+}
+
+.btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface-strong);
+  backdrop-filter: var(--blur);
+  color: var(--color-text);
+  font-size: 18px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 8px 18px var(--color-shadow);
+  z-index: 2;
+}
+
+.btn:hover {
+  transform: translateY(-50%) scale(1.08);
+  background: var(--color-primary);
+}
+
+.prev {
+  left: 15px;
+}
+
+.next {
+  right: 15px;
+}
+
+.dots {
+  position: absolute;
+  bottom: 16px;
+  width: 100%;
+  text-align: center;
+  z-index: 2;
+}
+
+.dot,
+.dotActive {
+  width: 11px;
+  height: 11px;
+  margin: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: var(--blur);
+  display: inline-block;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.dot:hover {
+  transform: scale(1.2);
+}
+
+.dotActive {
+  background: var(--color-primary);
+  box-shadow: 0 0 10px rgba(168, 198, 134, 0.6);
+}
+
+@media (max-width: 860px) {
+  .carousel {
+    height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .carousel {
+    height: 230px;
+  }
+}

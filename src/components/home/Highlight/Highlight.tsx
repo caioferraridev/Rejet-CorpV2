@@ -1,6 +1,12 @@
 import styles from "./Highlight.module.css";
 
-export default function Highlight() {
+interface HighlightProps {
+  onLogin?: () => void;
+}
+
+export default function Highlight({
+  onLogin,
+}: HighlightProps) {
   return (
     <section className={styles["highlight-section"]}>
       <div className={styles["highlight-box"]}>
@@ -21,6 +27,7 @@ export default function Highlight() {
         <button
           className={styles["highlight-btn"]}
           type="button"
+          onClick={onLogin}
         >
           Acessar plataforma
         </button>

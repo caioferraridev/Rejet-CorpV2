@@ -14,9 +14,9 @@ export default function Hero({
   onRegister,
 }: HeroProps) {
   return (
-    <section className={styles.heroSection}>
-      <div className={styles.heroContent}>
-        <div className={styles.heroBadge}>
+    <section className={styles["hero-section"]}>
+      <div className={styles["hero-content"]}>
+        <div className={styles["hero-badge"]}>
           <span>🌱</span>
           <span>Plataforma sustentável para empresas</span>
         </div>
@@ -32,18 +32,18 @@ export default function Hero({
           clareza e sustentabilidade.
         </p>
 
-        <div className={styles.heroPoints}>
-          <div className={styles.heroPoint}>
+        <div className={styles["hero-points"]}>
+          <div className={styles["hero-point"]}>
             <FiCheckCircle />
             <span>Foco em economia circular</span>
           </div>
 
-          <div className={styles.heroPoint}>
+          <div className={styles["hero-point"]}>
             <FiCheckCircle />
             <span>Negociação entre empresas</span>
           </div>
 
-          <div className={styles.heroPoint}>
+          <div className={styles["hero-point"]}>
             <FiCheckCircle />
             <span>Gestão mais sustentável de descartes</span>
           </div>
