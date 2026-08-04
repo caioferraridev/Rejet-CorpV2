@@ -2,7 +2,15 @@ import styles from "./LoginCard.module.css";
 
 import { FiUser, FiLock } from "react-icons/fi";
 
-export default function LoginCard() {
+interface LoginCardProps {
+  onLogin: () => void;
+  onRegister: () => void;
+}
+
+export default function LoginCard({
+  onLogin,
+  onRegister,
+}: LoginCardProps) {
   return (
     <section className={styles.wrapper}>
       <form>
@@ -38,10 +46,16 @@ export default function LoginCard() {
             Lembrar-me
           </label>
 
-          <a href="#">Recuperar senha</a>
+          <a href="#">
+            Recuperar senha
+          </a>
         </div>
 
-        <button className={styles.btn}>
+        <button
+          type="button"
+          className={styles.btn}
+          onClick={onLogin}
+        >
           Entrar
         </button>
 
@@ -49,7 +63,13 @@ export default function LoginCard() {
           <p>
             Ainda não tem conta?
 
-            <a href="#">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                onRegister();
+              }}
+            >
               Registrar-se
             </a>
           </p>

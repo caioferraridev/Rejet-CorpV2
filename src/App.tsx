@@ -1,3 +1,5 @@
+import LoginPage from "./pages/auth/Login/LoginPage";
+
 export default function App() {
-  return <h1>Rejet Corp</h1>;
+  return <LoginPage />;
 }
