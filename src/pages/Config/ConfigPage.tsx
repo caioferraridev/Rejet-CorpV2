@@ -1,87 +1,291 @@
+import { useEffect, useState } from "react";
+
 import styles from "./ConfigPage.module.css";
 
+import { Button, Card, Input, Select, Switch } from "../../components/ui";
+import { useSettings } from "../../hooks/useSettings";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../components/ui/Toast";
+import { signOut, updatePassword, updateEmail } from "../../services/auth/authService";
+import { useNavigate } from "react-router-dom";
+
+type Tab = "conta" | "aparencia" | "notificacoes" | "preferencias";
+
+const TABS: { key: Tab; label: string }[] = [
+  { key: "conta", label: "Conta" },
+  { key: "aparencia", label: "Aparência" },
+  { key: "notificacoes", label: "Notificações" },
+  { key: "preferencias", label: "Preferências" },
+];
+
 export default function ConfigPage() {
+  const { profile, user } = useAuth();
+  const { settings, loading, saving, save } = useSettings();
+  const { success, error } = useToast();
+  const navigate = useNavigate();
+
+  const [tab, setTab] = useState<Tab>("conta");
+  const [darkMode, setDarkMode] = useState(false);
+  const [language, setLanguage] = useState("pt-BR");
+  const [notifyMessages, setNotifyMessages] = useState(true);
+  const [notifyInterests, setNotifyInterests] = useState(true);
+  const [notifyNegotiations, setNotifyNegotiations] = useState(true);
+  const [notifyNews, setNotifyNews] = useState(false);
+  const [privacyProfile, setPrivacyProfile] = useState(true);
+
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    if (!settings) return;
+    setDarkMode(settings.dark_mode);
+    setLanguage(settings.language);
+    setNotifyMessages(settings.notify_messages);
+    setNotifyInterests(settings.notify_interests);
+    setNotifyNegotiations(settings.notify_negotiations);
+    setNotifyNews(settings.notify_news);
+    setPrivacyProfile(settings.privacy_profile);
+  }, [settings]);
+
+  async function saveAppearance() {
+    const ok = await save({ dark_mode: darkMode });
+    if (ok) success("Aparência salva.");
+    else error("Falha ao salvar aparência.");
+  }
+
+  async function saveNotifications() {
+    const ok = await save({
+      notify_messages: notifyMessages,
+      notify_interests: notifyInterests,
+      notify_negotiations: notifyNegotiations,
+      notify_news: notifyNews,
+    });
+    if (ok) success("Preferências de notificação salvas.");
+    else error("Falha ao salvar notificações.");
+  }
+
+  async function savePreferences() {
+    const ok = await save({ language, privacy_profile: privacyProfile });
+    if (ok) success("Preferências salvas.");
+    else error("Falha ao salvar preferências.");
+  }
+
+  async function handleUpdateEmail() {
+    if (!newEmail.trim()) {
+      error("Informe o novo e-mail.");
+      return;
+    }
+    setUpdating(true);
+    try {
+      await updateEmail(newEmail.trim());
+      success("E-mail atualizado. Verifique sua caixa de entrada.");
+      setNewEmail("");
+    } catch {
+      error("Falha ao atualizar o e-mail.");
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  async function handleUpdatePassword() {
+    if (newPassword.length < 6) {
+      error("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+    setUpdating(true);
+    try {
+      await updatePassword(newPassword);
+      success("Senha atualizada!");
+      setNewPassword("");
+    } catch {
+      error("Falha ao atualizar a senha.");
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  async function handleLogout() {
+    await signOut();
+    navigate("/");
+  }
+
   return (
-    <>
-      <img
-        src="https://picsum.photos/id/1015/1920/1080"
-        alt=""
-        className={styles.bgSite}
-      />
-      <div className={styles.bgOverlay}></div>
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Configurações</h1>
+        <p className={styles.subtitle}>Personalize sua conta e preferências.</p>
+      </div>
 
-      <div className={styles.container}>
-        <div className={styles.sidebar}>
-          <h2>⚙️ Config</h2>
-
-          <button type="button" className={`${styles.menuBtn} ${styles.active}`}>
-            Conta
-          </button>
-
-          <button type="button" className={styles.menuBtn}>
-            Aparência
-          </button>
-
-          <button type="button" className={styles.menuBtn}>
-            Notificações
-          </button>
-
-          <button type="button" className={styles.menuBtn}>
-            Preferências
-          </button>
-        </div>
+      <div className={styles.layout}>
+        <nav className={styles.tabs}>
+          {TABS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={`${styles.tab} ${tab === item.key ? styles.tabActive : ""}`}
+              onClick={() => setTab(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
 
         <div className={styles.content}>
-          <div className={styles.card}>
-            <h3>Conta</h3>
-            <label>Nome</label>
-            <input type="text" />
-            <label>Email</label>
-            <input type="email" />
-          </div>
+          {tab === "conta" && (
+            <>
+              <Card title="Informações da conta">
+                <div className={styles.infoRow}>
+                  <span>Empresa</span>
+                  <strong>{profile?.company_name ?? "—"}</strong>
+                </div>
+                <div className={styles.infoRow}>
+                  <span>E-mail</span>
+                  <strong>{profile?.email ?? user?.email ?? "—"}</strong>
+                </div>
+                <div className={styles.infoRow}>
+                  <span>CNPJ</span>
+                  <strong>{profile?.cnpj ?? "—"}</strong>
+                </div>
+              </Card>
 
-          <div className={styles.card}>
-            <h3>Aparência</h3>
-            <label>Tema</label>
-            <select>
-              <option>Claro</option>
-              <option>Escuro</option>
-            </select>
+              <Card title="Alterar e-mail">
+                <Input
+                  label="Novo e-mail"
+                  name="email"
+                  type="email"
+                  placeholder="novo@empresa.com.br"
+                  value={newEmail}
+                  onChange={(event) => setNewEmail(event.target.value)}
+                />
+                <Button onClick={handleUpdateEmail} disabled={updating}>
+                  Atualizar e-mail
+                </Button>
+              </Card>
 
-            <div className={styles.toggle}>
-              <span>Modo escuro</span>
-              <label className={styles.switch}>
-                <input type="checkbox" />
-                <span className={styles.slider}></span>
-              </label>
-            </div>
-          </div>
+              <Card title="Alterar senha">
+                <Input
+                  label="Nova senha"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                />
+                <Button onClick={handleUpdatePassword} disabled={updating}>
+                  Atualizar senha
+                </Button>
+              </Card>
 
-          <div className={styles.card}>
-            <h3>Notificações</h3>
-            <div className={styles.toggle}>
-              <span>Ativar</span>
-              <label className={styles.switch}>
-                <input type="checkbox" />
-                <span className={styles.slider}></span>
-              </label>
-            </div>
-          </div>
+              <Card title="Sessão" className={styles.dangerCard}>
+                <p className={styles.dangerText}>
+                  Encerrar a sessão atual em todos os dispositivos.
+                </p>
+                <Button variant="danger" onClick={handleLogout}>
+                  Sair da conta
+                </Button>
+              </Card>
+            </>
+          )}
 
-          <div className={styles.card}>
-            <h3>Preferências</h3>
-            <label>Idioma</label>
-            <select>
-              <option>Português</option>
-              <option>English</option>
-            </select>
-          </div>
+          {tab === "aparencia" && (
+            <Card title="Aparência">
+              {loading ? (
+                <p className={styles.loading}>Carregando preferências...</p>
+              ) : (
+                <>
+                  <div className={styles.switchRow}>
+                    <Switch
+                      label="Modo escuro"
+                      checked={darkMode}
+                      onChange={(event) => setDarkMode(event.target.checked)}
+                    />
+                  </div>
+                  <div className={styles.saveRow}>
+                    <Button onClick={saveAppearance} disabled={saving}>
+                      Salvar aparência
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Card>
+          )}
 
-          <button type="button" className={styles.btn}>
-            Salvar alterações
-          </button>
+          {tab === "notificacoes" && (
+            <Card title="Notificações">
+              {loading ? (
+                <p className={styles.loading}>Carregando preferências...</p>
+              ) : (
+                <>
+                  <div className={styles.switchList}>
+                    <Switch
+                      label="Novas mensagens"
+                      checked={notifyMessages}
+                      onChange={(event) => setNotifyMessages(event.target.checked)}
+                    />
+                    <Switch
+                      label="Novos interesses nos meus produtos"
+                      checked={notifyInterests}
+                      onChange={(event) => setNotifyInterests(event.target.checked)}
+                    />
+                    <Switch
+                      label="Atualizações de negociação"
+                      checked={notifyNegotiations}
+                      onChange={(event) => setNotifyNegotiations(event.target.checked)}
+                    />
+                    <Switch
+                      label="Novidades e comunicados"
+                      checked={notifyNews}
+                      onChange={(event) => setNotifyNews(event.target.checked)}
+                    />
+                  </div>
+                  <div className={styles.saveRow}>
+                    <Button onClick={saveNotifications} disabled={saving}>
+                      Salvar notificações
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Card>
+          )}
+
+          {tab === "preferencias" && (
+            <Card title="Preferências">
+              {loading ? (
+                <p className={styles.loading}>Carregando preferências...</p>
+              ) : (
+                <>
+                  <Select
+                    label="Idioma"
+                    name="language"
+                    value={language}
+                    onChange={(event) => setLanguage(event.target.value)}
+                    options={[
+                      { value: "pt-BR", label: "Português (Brasil)" },
+                      { value: "en", label: "English" },
+                      { value: "es", label: "Español" },
+                    ]}
+                  />
+
+                  <div className={styles.switchRow}>
+                    <Switch
+                      label="Perfil visível publicamente"
+                      checked={privacyProfile}
+                      onChange={(event) => setPrivacyProfile(event.target.checked)}
+                    />
+                  </div>
+
+                  <div className={styles.saveRow}>
+                    <Button onClick={savePreferences} disabled={saving}>
+                      Salvar preferências
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Card>
+          )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

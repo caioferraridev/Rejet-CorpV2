@@ -76,12 +76,12 @@ export default function AuthModal({ open, onClose, mode = "login" }: Props) {
     setSubmitting(true);
 
     try {
-      const { error } = await signUp(
-        companyName,
-        cnpjLimpo,
-        registerEmail,
-        registerPassword
-      );
+      const { error } = await signUp({
+        company_name: companyName,
+        cnpj: cnpjLimpo,
+        email: registerEmail,
+        password: registerPassword,
+      });
 
       if (error) {
         alert("Erro no cadastro: " + error.message);

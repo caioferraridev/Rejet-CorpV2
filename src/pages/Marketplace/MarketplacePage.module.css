@@ -1,0 +1,106 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.subtitle {
+  color: var(--color-text-soft);
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.searchWrap {
+  flex: 1;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-surface-strong);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 11px 16px;
+  color: var(--color-text-soft);
+  transition: var(--transition);
+}
+
+.searchWrap:focus-within {
+  border-color: rgba(116, 203, 227, 0.55);
+  box-shadow: 0 0 0 4px rgba(116, 203, 227, 0.12);
+}
+
+.searchWrap input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.filtersBar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--color-surface);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: 0 12px 30px var(--color-shadow);
+}
+
+.filtersBar > div,
+.filtersBar > label {
+  width: auto;
+  min-width: 130px;
+  flex: 1 1 130px;
+}
+
+.freeFilter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 12px 4px 6px;
+  user-select: none;
+}
+
+.freeFilter input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .searchWrap {
+    max-width: none;
+    flex-basis: 100%;
+  }
+}

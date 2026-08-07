@@ -1,8 +1,10 @@
 :root {
   --color-primary: #A8C686;
   --color-primary-dark: #8fb26d;
+  --color-primary-soft: rgba(168, 198, 134, 0.18);
   --color-secondary: #74CBE3;
   --color-secondary-dark: #57b8d4;
+  --color-secondary-soft: rgba(116, 203, 227, 0.14);
   --color-bg: #FAF7F0;
   --color-surface: rgba(255, 255, 255, 0.72);
   --color-surface-strong: rgba(255, 255, 255, 0.9);
@@ -12,6 +14,11 @@
   --color-text-soft: #566459;
   --color-white: #ffffff;
   --color-shadow: rgba(36, 49, 39, 0.10);
+  --color-success: #5d9f6c;
+  --color-danger: #e74c3c;
+  --color-danger-dark: #c0392b;
+  --color-warning: #e0a63a;
+  --color-info: #57b8d4;
 
   --radius-sm: 12px;
   --radius-md: 18px;
@@ -21,6 +28,9 @@
   --blur: blur(16px);
   --transition: 0.3s ease;
   --max-width: 1180px;
+
+  --font: "Poppins", system-ui, -apple-system, sans-serif;
+  --sidebar-width: 250px;
 }
 
 * {
@@ -40,8 +50,9 @@ body {
     rgba(168, 198, 134, 0.18),
     rgba(116, 203, 227, 0.16)
   ), var(--color-bg);
-  font-family: "Poppins", sans-serif;
+  font-family: var(--font);
   color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -50,6 +61,68 @@ a {
 }
 
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text);
+}
+
+/* Container utilitário */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Barra de rolagem */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(36, 49, 39, 0.04);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(36, 49, 39, 0.18);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(36, 49, 39, 0.3);
+}
+
+/* Textos de página */
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.page-subtitle {
+  color: var(--color-text-soft);
+  margin-top: 4px;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.fade-in {
+  animation: fadeIn 0.35s ease both;
 }

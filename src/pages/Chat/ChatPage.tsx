@@ -1,0 +1,248 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { FiArrowLeft, FiSend } from "react-icons/fi";
+
+import styles from "./ChatPage.module.css";
+
+import { Avatar, EmptyState, Loader } from "../../components/ui";
+import {
+  listConversations,
+  listMessages,
+  markConversationRead,
+  sendMessage,
+  subscribeToConversation,
+} from "../../services/messages/messageService";
+import { getPublicUrl } from "../../services/storage/storageService";
+import { useAuth } from "../../contexts/AuthContext";
+import { formatDateTime } from "../../utils/format";
+import type { Conversation, ChatMessage } from "../../types/chat";
+
+export default function ChatPage() {
+  const { profile, user } = useAuth();
+  const currentUserId = profile?.id ?? user?.id ?? null;
+
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [threadLoading, setThreadLoading] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const refreshConversations = useCallback(async () => {
+    if (!currentUserId) return;
+    setLoading(true);
+    try {
+      const data = await listConversations(currentUserId);
+      setConversations(data);
+    } catch {
+      setConversations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUserId]);
+
+  useEffect(() => {
+    void refreshConversations();
+  }, [refreshConversations]);
+
+  const openConversation = useCallback(
+    async (conversationId: string) => {
+      setActiveId(conversationId);
+      setThreadLoading(true);
+      try {
+        const [data] = await Promise.all([
+          listMessages(conversationId),
+          currentUserId ? markConversationRead(conversationId, currentUserId) : undefined,
+        ]);
+        setMessages(data);
+      } catch {
+        setMessages([]);
+      } finally {
+        setThreadLoading(false);
+      }
+    },
+    [currentUserId]
+  );
+
+  useEffect(() => {
+    if (!activeId || !currentUserId) return;
+    const unsubscribe = subscribeToConversation(activeId, (message) => {
+      setMessages((current) =>
+        current.some((item) => item.id === message.id)
+          ? current
+          : [...current, message]
+      );
+      void refreshConversations();
+    });
+    return unsubscribe;
+  }, [activeId, currentUserId, refreshConversations]);
+
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [messages, activeId]);
+
+  async function handleSend(event: React.FormEvent) {
+    event.preventDefault();
+    if (!draft.trim() || !activeId || !currentUserId) return;
+
+    setSending(true);
+    try {
+      await sendMessage(activeId, currentUserId, draft.trim());
+      setDraft("");
+      void openConversation(activeId);
+      void refreshConversations();
+    } catch {
+      /* erro silencioso no envio */
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const active = conversations.find((conversation) => conversation.id === activeId) ?? null;
+  const activeProductImage = active?.product ? getPublicUrl(active.product.main_image) : null;
+
+  return (
+    <div className={styles.page}>
+      <aside className={`${styles.list} ${activeId ? styles.listHidden : ""}`}>
+        <div className={styles.listHeader}>
+          <h1 className={styles.title}>Mensagens</h1>
+        </div>
+
+        {loading ? (
+          <Loader text="Carregando conversas..." />
+        ) : conversations.length === 0 ? (
+          <EmptyState
+            icon="💬"
+            title="Nenhuma conversa"
+            description="Envie um interesse em um produto para iniciar uma conversa."
+            action={
+              <Link to="/marketplace" className={styles.linkBtn}>
+                Explorar marketplace
+              </Link>
+            }
+          />
+        ) : (
+          <div className={styles.convList}>
+            {conversations.map((conversation) => (
+              <button
+                key={conversation.id}
+                type="button"
+                className={`${styles.convItem} ${conversation.id === activeId ? styles.convActive : ""}`}
+                onClick={() => openConversation(conversation.id)}
+              >
+                <Avatar
+                  src={conversation.other?.logo_url ?? null}
+                  name={conversation.other?.company_name ?? "Empresa"}
+                  size="md"
+                />
+                <div className={styles.convBody}>
+                  <div className={styles.convTop}>
+                    <strong className={styles.convName}>
+                      {conversation.other?.company_name ?? "Empresa"}
+                    </strong>
+                    <span className={styles.convTime}>
+                      {conversation.last_message?.created_at
+                        ? formatDateTime(conversation.last_message.created_at)
+                        : ""}
+                    </span>
+                  </div>
+                  <span className={styles.convProduct}>
+                    {conversation.product?.product ?? "Conversa"}
+                  </span>
+                  <span className={styles.convLast}>
+                    {conversation.last_message?.content ?? "Sem mensagens ainda"}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </aside>
+
+      <section className={`${styles.thread} ${activeId ? "" : styles.threadEmpty}`}>
+        {!active ? (
+          <div className={styles.placeholder}>
+            <span className={styles.placeholderIcon}>💬</span>
+            <p>Selecione uma conversa para começar.</p>
+          </div>
+        ) : (
+          <>
+            <div className={styles.threadHeader}>
+              <button
+                type="button"
+                className={styles.backBtn}
+                onClick={() => setActiveId(null)}
+                aria-label="Voltar"
+              >
+                <FiArrowLeft />
+              </button>
+
+              <Avatar
+                src={active.other?.logo_url ?? null}
+                name={active.other?.company_name ?? "Empresa"}
+                size="sm"
+              />
+
+              <div className={styles.threadWho}>
+                <strong>{active.other?.company_name ?? "Empresa"}</strong>
+                {active.product && (
+                  <span>
+                    Sobre: {active.product.product}
+                    {activeProductImage && (
+                      <img src={activeProductImage} alt="" className={styles.threadThumb} />
+                    )}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.messages} ref={listRef}>
+              {threadLoading ? (
+                <Loader text="Carregando mensagens..." small />
+              ) : messages.length === 0 ? (
+                <p className={styles.noMessages}>
+                  Nenhuma mensagem ainda. Envie a primeira!
+                </p>
+              ) : (
+                messages.map((message) => {
+                  const mine = currentUserId != null && message.sender_id === currentUserId;
+                  return (
+                    <div
+                      key={message.id}
+                      className={`${styles.msgRow} ${mine ? styles.mine : styles.theirs}`}
+                    >
+                      <div className={styles.bubble}>
+                        <p>{message.content}</p>
+                        <span className={styles.msgTime}>
+                          {formatDateTime(message.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <form className={styles.composer} onSubmit={handleSend}>
+              <input
+                type="text"
+                placeholder="Escreva uma mensagem..."
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                aria-label="Mensagem"
+              />
+              <button type="submit" disabled={sending || !draft.trim()} aria-label="Enviar">
+                <FiSend />
+              </button>
+            </form>
+          </>
+        )}
+      </section>
+    </div>
+  );
+}

@@ -3,12 +3,24 @@ import { useSearchParams } from "react-router-dom";
 
 import styles from "./CadastroProdutoPage.module.css";
 
-import DashboardLayout from "../../components/layout/DashboardLayout/DashboardLayout";
 import {
-  createProduct,
-  getProduct,
-  updateProduct,
-} from "../../services/products/productService";
+  Button,
+  Checkbox,
+  ImageUploader,
+  Input,
+  Select,
+  Textarea,
+} from "../../components/ui";
+import { createProduct, getProduct, updateProduct } from "../../services/products/productService";
+import { listCategories, listSubcategories } from "../../services/categories/categoryService";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../components/ui/Toast";
+import {
+  MATERIAL_TYPES,
+  PRODUCT_CONDITIONS,
+  PRODUCT_UNITS,
+} from "../../types/product";
+import type { Category, Subcategory } from "../../types/category";
 
 function formatCEP(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 8);
@@ -17,243 +29,391 @@ function formatCEP(value: string) {
     : digits;
 }
 
-function formatQuantityFromDigits(rawDigits: string) {
-  if (!rawDigits) return "";
-  const n = Number(rawDigits);
-  return (n / 1000).toLocaleString("pt-BR", {
-    minimumFractionDigits: 3,
-    maximumFractionDigits: 3,
-  });
+function formatNumberInput(value: string) {
+  return value.replace(/[^\d.,]/g, "");
 }
 
-function formatPriceFromDigits(rawDigits: string) {
-  if (!rawDigits) return "";
-  const n = Number(rawDigits);
-  return (n / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
+const UFS = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
+  "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
+  "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+];
 
 export default function CadastroProdutoPage() {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
 
-  const [product, setProduct] = useState("");
-  const [description, setDescription] = useState("");
-  const [quantityRaw, setQuantityRaw] = useState("");
-  const [quantityDisplay, setQuantityDisplay] = useState("");
-  const [cep, setCep] = useState("");
-  const [locationc, setLocationc] = useState("");
-  const [priceRaw, setPriceRaw] = useState("");
-  const [priceDisplay, setPriceDisplay] = useState("");
-  const [imageName, setImageName] = useState<string | null>(null);
+  const { profile, user } = useAuth();
+  const companyId = profile?.id ?? user?.id ?? null;
+  const { success, error } = useToast();
+
+  const [form, setForm] = useState({
+    product: "",
+    description: "",
+    category: "",
+    subcategory: "",
+    material_type: "",
+    condition: "",
+    quantities: "",
+    unit: "kg",
+    price: "",
+    is_free: false,
+    has_pickup: true,
+    has_delivery: false,
+    cep: "",
+    city: "",
+    state: "",
+    locationc: "",
+    main_image: null as string | null,
+  });
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    listCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    if (!form.category) {
+      setSubcategories([]);
+      return;
+    }
+    const category = categories.find((item) => item.name === form.category);
+    if (!category) return;
+    listSubcategories(category.id)
+      .then(setSubcategories)
+      .catch(() => setSubcategories([]));
+  }, [form.category, categories]);
 
   useEffect(() => {
     if (!editId) return;
 
     getProduct(editId)
       .then((target) => {
-        setProduct(target.product);
-        setDescription(target.description ?? "");
-        setQuantityDisplay(String(target.quantities ?? ""));
-        setQuantityRaw(
-          target.quantities != null
-            ? String(Math.round(target.quantities * 1000))
-            : ""
-        );
-        setCep(target.cep);
-        setLocationc(target.locationc ?? "");
-        setPriceDisplay(String(target.price ?? ""));
-        setPriceRaw(
-          target.price != null ? String(Math.round(target.price * 100)) : ""
-        );
-        setImageName(target.image_name);
+        setForm({
+          product: target.product,
+          description: target.description ?? "",
+          category: target.category ?? "",
+          subcategory: target.subcategory ?? "",
+          material_type: target.material_type ?? "",
+          condition: target.condition ?? "",
+          quantities: target.quantities != null ? String(target.quantities) : "",
+          unit: target.unit ?? "kg",
+          price: target.price != null ? String(target.price) : "",
+          is_free: target.is_free,
+          has_pickup: target.has_pickup,
+          has_delivery: target.has_delivery,
+          cep: target.cep ?? "",
+          city: target.city ?? "",
+          state: target.state ?? "",
+          locationc: target.locationc ?? "",
+          main_image: target.main_image,
+        });
       })
-      .catch((error) => {
-        console.error("Erro ao carregar produto", error);
-        alert("Erro ao carregar produto.");
+      .catch(() => {
+        error("Não foi possível carregar o produto para edição.");
       });
-  }, [editId]);
+  }, [editId, error]);
 
-  function handleQuantityInput(value: string) {
-    const raw = value.replace(/\D/g, "").slice(0, 12);
-    setQuantityRaw(raw);
-    setQuantityDisplay(raw);
-  }
-
-  function handleQuantityBlur() {
-    setQuantityDisplay(formatQuantityFromDigits(quantityRaw));
-  }
-
-  function handlePriceInput(value: string) {
-    const raw = value.replace(/\D/g, "").slice(0, 15);
-    setPriceRaw(raw);
-    setPriceDisplay(raw);
-  }
-
-  function handlePriceBlur() {
-    setPriceDisplay(formatPriceFromDigits(priceRaw));
+  function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+    setForm((current) => ({ ...current, [key]: value }));
   }
 
   function resetForm() {
-    setProduct("");
-    setDescription("");
-    setQuantityRaw("");
-    setQuantityDisplay("");
-    setCep("");
-    setLocationc("");
-    setPriceRaw("");
-    setPriceDisplay("");
-    setImageName(null);
+    setForm({
+      product: "",
+      description: "",
+      category: "",
+      subcategory: "",
+      material_type: "",
+      condition: "",
+      quantities: "",
+      unit: "kg",
+      price: "",
+      is_free: false,
+      has_pickup: true,
+      has_delivery: false,
+      cep: "",
+      city: "",
+      state: "",
+      locationc: "",
+      main_image: null,
+    });
   }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
-    const cepDigits = cep.replace(/\D/g, "");
-
-    if (!product.trim()) {
-      alert("Informe o nome do produto.");
+    if (!form.product.trim()) {
+      error("Informe o nome do produto.");
       return;
     }
 
-    if (!cepDigits || !quantityRaw || !priceRaw) {
-      alert("Preencha CEP, quantidade e valor corretamente.");
+    if (!companyId) {
+      error("Você precisa estar autenticado.");
       return;
     }
 
-    const quantities = parseInt(quantityRaw, 10) / 1000;
-    const price = parseInt(priceRaw, 10) / 100;
-
-    if (isNaN(quantities) || isNaN(price)) {
-      alert("Preencha CEP, quantidade e valor corretamente.");
+    if (!form.is_free && (!form.price || Number(form.price) < 0)) {
+      error("Informe um preço válido.");
       return;
     }
 
-    const payload = {
-      product: product.trim(),
-      description: description.trim(),
-      quantities,
-      cep: cepDigits,
-      locationc: locationc.trim(),
-      price,
-      image_name: imageName,
-    };
-
+    setSaving(true);
     try {
+      const payload = {
+        product: form.product.trim(),
+        description: form.description.trim() || undefined,
+        category: form.category || undefined,
+        subcategory: form.subcategory || undefined,
+        material_type: form.material_type || undefined,
+        condition: form.condition || undefined,
+        quantities: form.quantities ? Number(form.quantities) : undefined,
+        unit: form.unit,
+        price: form.is_free ? 0 : Number(form.price) || undefined,
+        is_free: form.is_free,
+        has_pickup: form.has_pickup,
+        has_delivery: form.has_delivery,
+        cep: form.cep ? form.cep.replace(/\D/g, "") : undefined,
+        city: form.city || undefined,
+        state: form.state || undefined,
+        locationc: form.locationc || undefined,
+        main_image: form.main_image,
+        status: "active" as const,
+      };
+
       if (editId) {
         await updateProduct(editId, payload);
-        alert("Produto atualizado com sucesso!");
+        success("Produto atualizado com sucesso!");
       } else {
         await createProduct(payload);
-        alert("Produto cadastrado com sucesso!");
+        success("Produto cadastrado com sucesso!");
+        resetForm();
       }
-
-      resetForm();
-    } catch (error) {
-      console.error("Erro no backend", error);
-      alert("Falha no cadastro: " + String(error));
+    } catch (err) {
+      error(err instanceof Error ? err.message : "Falha ao salvar o produto.");
+    } finally {
+      setSaving(false);
     }
   }
 
   return (
-    <DashboardLayout active="cadastrar">
-      <div className={styles.pageHeader}>
+    <div className={styles.page}>
+      <div className={styles.header}>
         <div>
-          <h1>Rejec Corp</h1>
-          <p>Plataforma de economia circular empresarial</p>
+          <h1 className={styles.title}>
+            {editId ? "Editar Produto" : "Cadastrar Produto"}
+          </h1>
+          <p className={styles.subtitle}>
+            Preencha as informações do produto para publicá-lo no marketplace.
+          </p>
         </div>
       </div>
 
-      <div className={styles.productCard}>
-        <h2>{editId ? "Editar Produto" : "Cadastrar Produto"}</h2>
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Informações básicas</h2>
 
-        <form className={styles.formGrid} onSubmit={handleSubmit}>
-          <div>
-            <label className={styles.label}>Produto</label>
-            <input
-              type="text"
-              className={styles.input}
-              value={product}
-              onChange={(event) => setProduct(event.target.value)}
-              required
+          <Input
+            label="Nome do produto"
+            name="product"
+            required
+            placeholder="Ex.: Sucata de alumínio"
+            value={form.product}
+            onChange={(event) => update("product", event.target.value)}
+          />
+
+          <Textarea
+            label="Descrição"
+            name="description"
+            rows={4}
+            placeholder="Descreva o material, quantidade, condições de entrega..."
+            value={form.description}
+            onChange={(event) => update("description", event.target.value)}
+          />
+
+          <div className={styles.row}>
+            <Select
+              label="Categoria"
+              name="category"
+              placeholder="Selecione"
+              value={form.category}
+              onChange={(event) => {
+                update("category", event.target.value);
+                update("subcategory", "");
+              }}
+              options={categories.map((category) => ({
+                value: category.name,
+                label: category.name,
+              }))}
+            />
+
+            {subcategories.length > 0 && (
+              <Select
+                label="Subcategoria"
+                name="subcategory"
+                placeholder="Selecione"
+                value={form.subcategory}
+                onChange={(event) => update("subcategory", event.target.value)}
+                options={subcategories.map((item) => ({
+                  value: item.name,
+                  label: item.name,
+                }))}
+              />
+            )}
+
+            <Select
+              label="Tipo de material"
+              name="material_type"
+              placeholder="Selecione"
+              value={form.material_type}
+              onChange={(event) => update("material_type", event.target.value)}
+              options={MATERIAL_TYPES.map((material) => ({
+                value: material,
+                label: material,
+              }))}
             />
           </div>
 
-          <div className={styles.full}>
-            <label className={styles.label}>Descrição</label>
-            <textarea
-              className={styles.input}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
+          <div className={styles.row}>
+            <Select
+              label="Condição"
+              name="condition"
+              placeholder="Selecione"
+              value={form.condition}
+              onChange={(event) => update("condition", event.target.value)}
+              options={PRODUCT_CONDITIONS.map((condition) => ({
+                value: condition.value,
+                label: condition.label,
+              }))}
+            />
+
+            <Input
+              label="Quantidade"
+              name="quantities"
+              type="number"
+              min={0}
+              step="any"
+              placeholder="0"
+              value={form.quantities}
+              onChange={(event) => update("quantities", event.target.value)}
+            />
+
+            <Select
+              label="Unidade"
+              name="unit"
+              value={form.unit}
+              onChange={(event) => update("unit", event.target.value)}
+              options={PRODUCT_UNITS.map((unit) => ({
+                value: unit.value,
+                label: unit.label,
+              }))}
             />
           </div>
+        </section>
 
-          <div>
-            <label className={styles.label}>Quantidade (kg)</label>
-            <input
-              type="text"
-              className={styles.input}
-              value={quantityDisplay}
-              onChange={(event) => handleQuantityInput(event.target.value)}
-              onFocus={() => setQuantityDisplay(quantityRaw)}
-              onBlur={handleQuantityBlur}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Preço e logística</h2>
+
+          <div className={styles.row}>
+            <Input
+              label="Preço (R$)"
+              name="price"
+              type="number"
+              min={0}
+              step="any"
+              placeholder="0,00"
+              disabled={form.is_free}
+              value={form.price}
+              onChange={(event) => update("price", formatNumberInput(event.target.value))}
             />
+
+            <label className={styles.freeCheck}>
+              <Checkbox
+                checked={form.is_free}
+                onChange={(event) => update("is_free", event.target.checked)}
+              />
+              Produto gratuito
+            </label>
           </div>
 
-          <div>
-            <label className={styles.label}>CEP</label>
-            <input
-              type="text"
-              className={styles.input}
+          <div className={styles.row}>
+            <Input
+              label="CEP"
+              name="cep"
               maxLength={9}
-              value={cep}
-              onChange={(event) => setCep(formatCEP(event.target.value))}
-              required
+              placeholder="00000-000"
+              value={form.cep}
+              onChange={(event) => update("cep", formatCEP(event.target.value))}
+            />
+
+            <Input
+              label="Cidade"
+              name="city"
+              placeholder="São Paulo"
+              value={form.city}
+              onChange={(event) => update("city", event.target.value)}
+            />
+
+            <Select
+              label="Estado"
+              name="state"
+              placeholder="UF"
+              value={form.state}
+              onChange={(event) => update("state", event.target.value)}
+              options={UFS.map((uf) => ({ value: uf, label: uf }))}
             />
           </div>
 
-          <div>
-            <label className={styles.label}>Local de coleta</label>
-            <input
-              type="text"
-              className={styles.input}
-              value={locationc}
-              onChange={(event) => setLocationc(event.target.value)}
+          <Input
+            label="Local de coleta / retirada"
+            name="locationc"
+            placeholder="Ex.: Rua das Indústrias, 1000 — Distrito Industrial"
+            value={form.locationc}
+            onChange={(event) => update("locationc", event.target.value)}
+          />
+
+          <div className={styles.logistics}>
+            <Checkbox
+              checked={form.has_pickup}
+              onChange={(event) => update("has_pickup", event.target.checked)}
+              label="Aceito retirada no local"
+            />
+            <Checkbox
+              checked={form.has_delivery}
+              onChange={(event) => update("has_delivery", event.target.checked)}
+              label="Ofereço entrega"
             />
           </div>
+        </section>
 
-          <div>
-            <label className={styles.label}>Valor (R$)</label>
-            <input
-              type="text"
-              className={styles.input}
-              value={priceDisplay}
-              onChange={(event) => handlePriceInput(event.target.value)}
-              onFocus={() => setPriceDisplay(priceRaw)}
-              onBlur={handlePriceBlur}
-            />
-          </div>
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Imagem do produto</h2>
+          <ImageUploader
+            label="Imagem principal"
+            value={form.main_image}
+            onChange={(image) => update("main_image", image)}
+            hint="PNG, JPG ou WEBP até 5 MB."
+          />
+        </section>
 
-          <div>
-            <label className={styles.label}>Imagem</label>
-            <input
-              type="file"
-              className={styles.input}
-              onChange={(event) =>
-                setImageName(event.target.files?.[0]?.name ?? null)
-              }
-            />
-          </div>
-
-          <div className={styles.full}>
-            <button type="submit" className={styles.btnSuccess}>
-              {editId ? "Atualizar" : "Cadastrar"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </DashboardLayout>
+        <div className={styles.footerActions}>
+          <Button type="button" variant="ghost" onClick={resetForm}>
+            Limpar formulário
+          </Button>
+          <Button type="submit" disabled={saving}>
+            {saving
+              ? "Salvando..."
+              : editId
+                ? "Atualizar produto"
+                : "Publicar produto"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }
