@@ -13,6 +13,7 @@ import {
   getAdminDashboard,
   type AdminDashboardData,
 } from "../../services/admin/adminService";
+import { useAuth } from "../../contexts/AuthContext";
 import { listReports, updateReportStatus } from "../../services/reports/reportService";
 import { useToast } from "../../components/ui/Toast";
 import { formatCurrency, formatDate, formatNumber } from "../../utils/format";
@@ -38,6 +39,7 @@ const REPORT_STATUS: Record<ReportStatus, "warning" | "secondary" | "success" | 
 
 export default function AdminPage() {
   const { success, error } = useToast();
+  const { profile } = useAuth();
 
   const [tab, setTab] = useState<Tab>("overview");
 
@@ -156,6 +158,19 @@ export default function AdminPage() {
 
   if (loading) {
     return <Loader text="Carregando painel admin..." fullPage />;
+  }
+
+  if (profile?.role !== "admin") {
+    return (
+      <div className={styles.denied}>
+        <span className={styles.deniedIcon}>🔒</span>
+        <h2>Acesso restrito</h2>
+        <p>
+          Esta área é exclusiva para administradores da plataforma.
+          Entre com uma conta com privilégios de administrador.
+        </p>
+      </div>
+    );
   }
 
   return (

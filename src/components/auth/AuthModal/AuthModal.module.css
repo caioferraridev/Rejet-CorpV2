@@ -151,6 +151,64 @@
   text-decoration: underline;
 }
 
+.forgot {
+  margin-top: 12px;
+  text-align: right;
+  font-size: 13px;
+}
+
+.forgot span {
+  color: var(--color-secondary-dark);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.forgot span:hover {
+  text-decoration: underline;
+}
+
+.formError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.28);
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.formError svg {
+  flex-shrink: 0;
+}
+
+.sentBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(93, 159, 108, 0.12);
+  border: 1px solid rgba(93, 159, 108, 0.3);
+  color: var(--color-success);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 16px;
+}
+
+.sentBox svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 @media (max-width: 640px) {
   .modal {
     padding: 30px 18px 22px;

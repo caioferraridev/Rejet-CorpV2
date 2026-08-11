@@ -1,7 +1,7 @@
 import { supabase } from "../supabase/client";
 import type { Product, ProductInput, ProductFilters } from "../../types/product";
 
-const PRODUCT_SELECT = `id,product,description,category,subcategory,material_type,quantities,unit,weight,price,is_free,condition,locationc,cep,city,state,has_pickup,has_delivery,main_image,images,documents,status,views,created_by,created_at,updated_at,
+const PRODUCT_SELECT = `id,product,description,category,subcategory,material_type,quantities,unit,weight,price,is_free,negotiable,min_quantity,condition,locationc,cep,city,state,has_pickup,has_delivery,main_image,images,documents,status,views,views_updated_at,created_by,created_at,updated_at,
 company:companies(id,company_name,trade_name,logo_url,city,state,verified,rating)`;
 
 export function buildProductQuery(filters: ProductFilters = {}) {
@@ -78,9 +78,18 @@ export async function incrementProductViews(id: string) {
 }
 
 export async function createProduct(payload: ProductInput) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const row = {
+    ...payload,
+    created_by: user?.id ?? null,
+  };
+
   const { data, error } = await supabase
     .from("produtos")
-    .insert(payload)
+    .insert(row)
     .select(PRODUCT_SELECT)
     .single();
 

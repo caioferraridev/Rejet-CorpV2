@@ -23,6 +23,8 @@ export interface Product {
   weight: number | null;
   price: number | null;
   is_free: boolean;
+  negotiable: boolean;
+  min_quantity: number | null;
   condition: string | null;
   locationc: string | null;
   cep: string | null;
@@ -35,6 +37,7 @@ export interface Product {
   documents: string[];
   status: ProductStatus;
   views: number;
+  views_updated_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -52,6 +55,8 @@ export interface ProductInput {
   weight?: number;
   price?: number;
   is_free: boolean;
+  negotiable?: boolean;
+  min_quantity?: number | null;
   condition?: string;
   locationc?: string;
   cep?: string;

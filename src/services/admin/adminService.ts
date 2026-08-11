@@ -20,7 +20,6 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
   const products = await supabase.from("produtos").select("id,status", { count: "exact" });
   const negotiations = await supabase.from("negotiations").select("id,status", { count: "exact" });
   const reports = await supabase.from("reports").select("id,status", { count: "exact" });
-  const authUsers = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
 
   const allProducts = products.data ?? [];
   const allNegotiations = negotiations.data ?? [];
@@ -31,7 +30,7 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
     totalProducts: products.count ?? 0,
     totalNegotiations: negotiations.count ?? 0,
     totalReports: reports.count ?? 0,
-    totalUsers: (authUsers.data as { total?: number } | null)?.total ?? 0,
+    totalUsers: companies.count ?? 0,
     activeProducts: allProducts.filter((p) => p.status === "active").length,
     finishedNegotiations: allNegotiations.filter((n) => n.status === "finalizado").length,
     pendingReports: allReports.filter((r) => r.status === "pending").length,

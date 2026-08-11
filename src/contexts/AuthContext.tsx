@@ -16,8 +16,10 @@ interface AuthContextType {
   user: User | null;
   profile: Company | null;
   loading: boolean;
+  accountBlocked: boolean;
   refreshProfile: () => Promise<void>;
   setProfile: (profile: Company | null) => void;
+  clearSession: () => Promise<void>;
 }
 
 const AuthContext = createContext({} as AuthContextType);
@@ -26,11 +28,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accountBlocked, setAccountBlocked] = useState(false);
+
+  const clearSession = useCallback(async () => {
+    localStorage.removeItem("rejec_pending_company");
+    setProfile(null);
+    setAccountBlocked(false);
+    await supabase.auth.signOut();
+  }, []);
 
   const refreshProfile = useCallback(async (userId?: string) => {
     const id = userId ?? (await supabase.auth.getUser()).data.user?.id;
     if (!id) {
       setProfile(null);
+      setAccountBlocked(false);
       return;
     }
 
@@ -73,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const finalCompany = await getCurrentCompany(id).catch(() => null);
     setProfile(finalCompany);
+    setAccountBlocked(finalCompany ? !finalCompany.active : false);
   }, []);
 
   useEffect(() => {
@@ -95,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshProfile(session.user.id);
       } else {
         setProfile(null);
+        setAccountBlocked(false);
       }
     });
 
@@ -106,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, refreshProfile, setProfile }}
+      value={{ user, profile, loading, accountBlocked, refreshProfile, setProfile, clearSession }}
     >
       {children}
     </AuthContext.Provider>
