@@ -24,6 +24,7 @@ export function buildProductQuery(filters: ProductFilters = {}) {
   if (filters.city) query = query.eq("city", filters.city);
   if (filters.condition) query = query.eq("condition", filters.condition);
   if (filters.is_free !== undefined) query = query.eq("is_free", filters.is_free);
+  if (filters.negotiable) query = query.eq("negotiable", true);
   if (filters.min_price !== undefined) query = query.gte("price", filters.min_price);
   if (filters.max_price !== undefined) query = query.lte("price", filters.max_price);
 
@@ -82,9 +83,35 @@ export async function createProduct(payload: ProductInput) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) throw new Error("Usuário não autenticado.");
+
+  const { data: company } = await supabase
+    .from("companies")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!company) {
+    const meta = (user.user_metadata ?? {}) as Record<string, string>;
+    const { error: upsertErr } = await supabase.from("companies").upsert(
+      {
+        id: user.id,
+        company_name: meta.company_name ?? "Empresa",
+        cnpj: meta.cnpj ?? "",
+        email: user.email ?? "",
+      },
+      { onConflict: "id" },
+    );
+    if (upsertErr) {
+      throw new Error(
+        "Perfil da empresa não encontrado. Por favor, complete seu cadastro antes de cadastrar produtos.",
+      );
+    }
+  }
+
   const row = {
     ...payload,
-    created_by: user?.id ?? null,
+    created_by: user.id,
   };
 
   const { data, error } = await supabase

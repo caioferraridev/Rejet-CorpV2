@@ -35,8 +35,10 @@ export default function MarketplacePage() {
     category: "",
     material_type: "",
     state: "",
+    city: "",
     condition: "",
     is_free: false,
+    negotiable: false,
     min_price: "",
     max_price: "",
     sort: "recent" as ProductFilters["sort"],
@@ -55,8 +57,10 @@ export default function MarketplacePage() {
       category: filters.category || undefined,
       material_type: filters.material_type || undefined,
       state: filters.state || undefined,
+      city: filters.city || undefined,
       condition: filters.condition || undefined,
       is_free: filters.is_free || undefined,
+      negotiable: filters.negotiable || undefined,
       min_price: filters.min_price ? Number(filters.min_price) : undefined,
       max_price: filters.max_price ? Number(filters.max_price) : undefined,
       sort: filters.sort,
@@ -80,8 +84,10 @@ export default function MarketplacePage() {
       filters.category !== "" ||
       filters.material_type !== "" ||
       filters.state !== "" ||
+      filters.city !== "" ||
       filters.condition !== "" ||
       filters.is_free ||
+      filters.negotiable ||
       filters.min_price !== "" ||
       filters.max_price !== "",
     [filters]
@@ -93,8 +99,10 @@ export default function MarketplacePage() {
       category: "",
       material_type: "",
       state: "",
+      city: "",
       condition: "",
       is_free: false,
+      negotiable: false,
       min_price: "",
       max_price: "",
       sort: "recent",
@@ -169,6 +177,13 @@ export default function MarketplacePage() {
           options={UFS.map((uf) => ({ value: uf, label: uf }))}
         />
 
+        <Input
+          name="city"
+          placeholder="Cidade"
+          value={filters.city}
+          onChange={(event) => updateFilter("city", event.target.value)}
+        />
+
         <Select
           name="condition"
           placeholder="Condição"
@@ -217,6 +232,15 @@ export default function MarketplacePage() {
             onChange={(event) => updateFilter("is_free", event.target.checked)}
           />
           Grátis
+        </label>
+
+        <label className={styles.freeFilter}>
+          <input
+            type="checkbox"
+            checked={filters.negotiable}
+            onChange={(event) => updateFilter("negotiable", event.target.checked)}
+          />
+          Negociável
         </label>
 
         {hasActiveFilters && (

@@ -105,6 +105,22 @@
   white-space: nowrap;
 }
 
+.unreadBadge {
+  flex-shrink: 0;
+  align-self: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .thread {
   display: flex;
   flex-direction: column;

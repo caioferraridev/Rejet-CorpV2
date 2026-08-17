@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { FiArrowLeft, FiSend } from "react-icons/fi";
 
 import styles from "./ChatPage.module.css";
 
 import { Avatar, EmptyState, Loader } from "../../components/ui";
+import { supabase } from "../../services/supabase/client";
 import {
   listConversations,
   listMessages,
@@ -20,6 +21,7 @@ import type { Conversation, ChatMessage } from "../../types/chat";
 export default function ChatPage() {
   const { profile, user } = useAuth();
   const currentUserId = profile?.id ?? user?.id ?? null;
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -28,6 +30,7 @@ export default function ChatPage() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
 
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -47,6 +50,36 @@ export default function ChatPage() {
   useEffect(() => {
     void refreshConversations();
   }, [refreshConversations]);
+
+  useEffect(() => {
+    if (!currentUserId || conversations.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        conversations.map(async (conv) => {
+          const { count } = await supabase
+            .from("messages")
+            .select("id", { count: "exact", head: true })
+            .eq("conversation_id", conv.id)
+            .eq("read", false)
+            .neq("sender_id", currentUserId);
+          if (!cancelled) counts[conv.id] = count ?? 0;
+        })
+      );
+      if (!cancelled) setUnreadMap(counts);
+    })();
+    return () => { cancelled = true; };
+  }, [conversations, currentUserId]);
+
+  useEffect(() => {
+    const param = searchParams.get("conversa");
+    if (param) {
+      setActiveId(param);
+      setSearchParams({}, { replace: true });
+      void openConversation(param);
+    }
+  }, []);
 
   const openConversation = useCallback(
     async (conversationId: string) => {
@@ -158,6 +191,11 @@ export default function ChatPage() {
                     {conversation.last_message?.content ?? "Sem mensagens ainda"}
                   </span>
                 </div>
+                {unreadMap[conversation.id] != null && unreadMap[conversation.id] > 0 && (
+                  <span className={styles.unreadBadge}>
+                    {unreadMap[conversation.id]}
+                  </span>
+                )}
               </button>
             ))}
           </div>

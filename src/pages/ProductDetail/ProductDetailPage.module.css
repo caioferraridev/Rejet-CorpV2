@@ -150,6 +150,42 @@
   white-space: pre-wrap;
 }
 
+.documents h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.docList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.docLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(116, 203, 227, 0.1);
+  border: 1px solid rgba(116, 203, 227, 0.25);
+  color: var(--color-secondary-dark);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.docLink:hover {
+  background: rgba(116, 203, 227, 0.2);
+  transform: translateY(-1px);
+}
+
 .actions {
   display: flex;
   gap: 10px;

@@ -48,6 +48,11 @@ create policy "companies_insert_self" on public.companies
 create policy "companies_update_self" on public.companies
   for update using (id = auth.uid());
 
+create policy "companies_update_admin" on public.companies
+  for update using (
+    exists (select 1 from public.companies c where c.id = auth.uid() and c.role = 'admin')
+  );
+
 -- =====================================================================
 --  CATEGORIAS E SUBCATEGORIAS
 -- =====================================================================
@@ -153,6 +158,11 @@ create policy "produtos_update_owner" on public.produtos
 
 create policy "produtos_delete_owner" on public.produtos
   for delete using (created_by = auth.uid());
+
+create policy "produtos_delete_admin" on public.produtos
+  for delete using (
+    exists (select 1 from public.companies c where c.id = auth.uid() and c.role = 'admin')
+  );
 
 -- =====================================================================
 --  FAVORITOS
@@ -265,6 +275,33 @@ create policy "negotiations_update_self" on public.negotiations
 
 create policy "negotiations_delete_self" on public.negotiations
   for delete using (buyer_id = auth.uid());
+
+-- =====================================================================
+--  HISTÓRICO DE NEGOCIAÇÕES
+-- =====================================================================
+create table if not exists public.negotiation_history (
+  id              uuid primary key default gen_random_uuid(),
+  negotiation_id  uuid not null references public.negotiations(id) on delete cascade,
+  actor_id        uuid references public.companies(id) on delete set null,
+  previous_status text,
+  new_status      text not null,
+  observation     text,
+  created_at      timestamptz not null default now()
+);
+
+create index if not exists negotiation_history_negotiation_idx
+  on public.negotiation_history(negotiation_id, created_at);
+
+alter table public.negotiation_history enable row level security;
+
+create policy "negotiation_history_select_participant" on public.negotiation_history
+  for select using (
+    exists (
+      select 1 from public.negotiations n
+      where n.id = negotiation_history.negotiation_id
+        and (n.buyer_id = auth.uid() or n.seller_id = auth.uid())
+    )
+  );
 
 -- =====================================================================
 --  NOTIFICAÇÕES
@@ -400,34 +437,7 @@ create policy "user_settings_update_self" on public.user_settings
   for update using (user_id = auth.uid());
 
 -- =====================================================================
---  HISTÓRICO DE NEGOCIAÇÕES
--- =====================================================================
-create table if not exists public.negotiation_history (
-  id            uuid primary key default gen_random_uuid(),
-  negotiation_id uuid not null references public.negotiations(id) on delete cascade,
-  status_from   text,
-  status_to     text not null,
-  note          text,
-  created_by    uuid references public.companies(id) on delete set null,
-  created_at    timestamptz not null default now()
-);
-
-create index if not exists negotiation_history_negotiation_idx
-  on public.negotiation_history(negotiation_id, created_at);
-
-alter table public.negotiation_history enable row level security;
-
-create policy "negotiation_history_select_participant" on public.negotiation_history
-  for select using (
-    exists (
-      select 1 from public.negotiations n
-      where n.id = negotiation_history.negotiation_id
-        and (n.buyer_id = auth.uid() or n.seller_id = auth.uid())
-    )
-  );
-
--- =====================================================================
---  FUNÇÕES E TRIGGERS (notificações, atividades e histórico automáticos)
+--  FUNÇÕES AUXILIARES
 -- =====================================================================
 
 -- Contador de visualizações anti-abuso (máx. 1x a cada 30s por produto)
@@ -450,6 +460,7 @@ $$;
 revoke all on function public.increment_views(uuid) from public;
 grant execute on function public.increment_views(uuid) to authenticated;
 
+-- Inserir notificação
 create or replace function public.notify_user(
   p_user_id uuid, p_type text, p_title text,
   p_message text default null, p_link text default null
@@ -466,6 +477,7 @@ begin
 end;
 $$;
 
+-- Registrar atividade
 create or replace function public.log_user_activity(
   p_user_id uuid, p_action text, p_details text default null
 )
@@ -479,6 +491,10 @@ begin
   insert into public.activity_logs (user_id, action, details) values (p_user_id, p_action, p_details);
 end;
 $$;
+
+-- =====================================================================
+--  TRIGGERS
+-- =====================================================================
 
 -- 1) Negociação criada → notifica vendedor + atividade do comprador
 create or replace function public.on_negotiation_insert()
@@ -541,8 +557,8 @@ create or replace function public.record_negotiation_history()
 returns trigger language plpgsql security definer set search_path = public
 as $$
 begin
-  insert into public.negotiation_history (negotiation_id, status_from, status_to, note, created_by)
-  values (new.id, coalesce(old.status, null), new.status, null, coalesce(auth.uid(), new.buyer_id));
+  insert into public.negotiation_history (negotiation_id, actor_id, previous_status, new_status, observation)
+  values (new.id, coalesce(auth.uid(), new.buyer_id), old.status, new.status, null);
   return new;
 end; $$;
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import styles from "./AdminPage.module.css";
 
-import { Avatar, Badge, Button, Card, EmptyState, Loader, Select } from "../../components/ui";
+import { Avatar, Badge, Button, Card, ConfirmDialog, EmptyState, Loader, Select } from "../../components/ui";
 import {
   adminDeleteCompany,
   adminDeleteProduct,
@@ -49,6 +49,8 @@ export default function AdminPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [productFilter, setProductFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const refreshOverview = useCallback(async () => {
     try {
@@ -120,8 +122,14 @@ export default function AdminPage() {
     }
   }
 
-  async function removeCompany(company: Company) {
-    if (!window.confirm(`Excluir a empresa "${company.company_name}" e todos os seus dados?`)) return;
+  function removeCompany(company: Company) {
+    setCompanyToDelete(company);
+  }
+
+  async function confirmDeleteCompany() {
+    if (!companyToDelete) return;
+    const company = companyToDelete;
+    setCompanyToDelete(null);
     try {
       await adminDeleteCompany(company.id);
       setCompanies((current) => current.filter((item) => item.id !== company.id));
@@ -132,8 +140,14 @@ export default function AdminPage() {
     }
   }
 
-  async function removeProduct(product: Product) {
-    if (!window.confirm(`Excluir o produto "${product.product}"?`)) return;
+  function removeProduct(product: Product) {
+    setProductToDelete(product);
+  }
+
+  async function confirmDeleteProduct() {
+    if (!productToDelete) return;
+    const product = productToDelete;
+    setProductToDelete(null);
     try {
       await adminDeleteProduct(product.id);
       setProducts((current) => current.filter((item) => item.id !== product.id));
@@ -448,6 +462,24 @@ export default function AdminPage() {
           )}
         </Card>
       )}
+
+      <ConfirmDialog
+        open={companyToDelete !== null}
+        title="Excluir empresa"
+        message={`Excluir a empresa "${companyToDelete?.company_name}" e todos os seus dados? Esta ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        onConfirm={() => void confirmDeleteCompany()}
+        onCancel={() => setCompanyToDelete(null)}
+      />
+
+      <ConfirmDialog
+        open={productToDelete !== null}
+        title="Excluir produto"
+        message={`Excluir o produto "${productToDelete?.product}"? Esta ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        onConfirm={() => void confirmDeleteProduct()}
+        onCancel={() => setProductToDelete(null)}
+      />
     </div>
   );
 }

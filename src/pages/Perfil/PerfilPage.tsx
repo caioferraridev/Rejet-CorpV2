@@ -14,6 +14,7 @@ import {
 } from "../../components/ui";
 import { updateCompany } from "../../services/companies/companyService";
 import { uploadCompanyMedia } from "../../services/storage/storageService";
+import { ReviewSection } from "../../components/reviews/ReviewSection/ReviewSection";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../components/ui/Toast";
 import { formatCNPJ, formatDate } from "../../utils/format";
@@ -337,6 +338,10 @@ export default function PerfilPage() {
           </Button>
         </div>
       </form>
+
+      {profile && (
+        <ReviewSection companyId={profile.id} isOwnCompany />
+      )}
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   FiBriefcase,
+  FiDownload,
+  FiFile,
   FiHeart,
   FiMapPin,
   FiMessageSquare,
@@ -22,12 +24,14 @@ import {
 } from "../../components/ui";
 import ProductCard from "../../components/product/ProductCard/ProductCard";
 import NegotiationModal from "../../components/negotiation/NegotiationModal/NegotiationModal";
+import { ReviewSection } from "../../components/reviews/ReviewSection/ReviewSection";
 import {
   getProduct,
   incrementProductViews,
   listRelatedProducts,
 } from "../../services/products/productService";
 import { getPublicUrl } from "../../services/storage/storageService";
+import { getOrCreateConversation } from "../../services/messages/messageService";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useToast } from "../../components/ui/Toast";
 import { useAuth } from "../../contexts/AuthContext";
@@ -41,6 +45,7 @@ export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { profile, user } = useAuth();
   const currentUserId = profile?.id ?? user?.id ?? null;
+  const navigate = useNavigate();
 
   const { isFavorite, toggle } = useFavorites();
   const { success, error } = useToast();
@@ -50,6 +55,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [negotiateOpen, setNegotiateOpen] = useState(false);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [startingChat, setStartingChat] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -58,11 +64,16 @@ export default function ProductDetailPage() {
     setLoading(true);
     setProduct(null);
 
-    Promise.all([getProduct(id), incrementProductViews(id).catch(() => undefined)])
-      .then(([data]) => {
+    getProduct(id)
+      .then((data) => {
         if (!active) return;
         setProduct(data);
         setActiveImage(data.main_image ?? data.images?.[0] ?? null);
+
+        if (id) {
+          incrementProductViews(id).catch(() => undefined);
+        }
+
         return listRelatedProducts(data).then((items) => {
           if (active) setRelated(items);
         });
@@ -106,6 +117,22 @@ export default function ProductDetailPage() {
       ?.writeText(window.location.href)
       .then(() => success("Link copiado!"))
       .catch(() => undefined);
+  }
+
+  async function handleStartChat() {
+    if (!currentUserId || !product?.company) return;
+    setStartingChat(true);
+    try {
+      const conversationId = await getOrCreateConversation(currentUserId, {
+        product_id: product.id,
+        participant_b: product.company.id,
+      });
+      navigate(`/mensagens?conversa=${encodeURIComponent(conversationId)}`);
+    } catch {
+      error("Falha ao iniciar conversa.");
+    } finally {
+      setStartingChat(false);
+    }
   }
 
   if (loading) {
@@ -171,6 +198,9 @@ export default function ProductDetailPage() {
             {product.condition && (
               <Badge variant="secondary">{product.condition}</Badge>
             )}
+            {product.negotiable && (
+              <Badge variant="primary">Negociável</Badge>
+            )}
           </div>
 
           <h1 className={styles.title}>{product.product}</h1>
@@ -184,6 +214,12 @@ export default function ProductDetailPage() {
               <span>Quantidade</span>
               <strong>{formatQuantity(product.quantities, product.unit)}</strong>
             </div>
+            {product.min_quantity != null && product.min_quantity > 0 && (
+              <div className={styles.metaItem}>
+                <span>Qtd. mínima</span>
+                <strong>{formatQuantity(product.min_quantity, product.unit)}</strong>
+              </div>
+            )}
             {product.material_type && (
               <div className={styles.metaItem}>
                 <span>Material</span>
@@ -215,6 +251,29 @@ export default function ProductDetailPage() {
             <div className={styles.description}>
               <h2>Descrição</h2>
               <p>{product.description}</p>
+            </div>
+          )}
+
+          {product.documents && product.documents.length > 0 && (
+            <div className={styles.documents}>
+              <h2><FiFile /> Documentos</h2>
+              <div className={styles.docList}>
+                {product.documents.map((doc) => {
+                  const url = getPublicUrl(doc);
+                  const name = doc.split("/").pop() ?? "Documento";
+                  return url ? (
+                    <a
+                      key={doc}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.docLink}
+                    >
+                      <FiDownload /> {name}
+                    </a>
+                  ) : null;
+                })}
+              </div>
             </div>
           )}
 
@@ -260,11 +319,19 @@ export default function ProductDetailPage() {
             </span>
           </div>
           {!isMine && (
-            <Button to="/mensagens" variant="secondary">
-              <FiMessageSquare /> Falar com a empresa
+            <Button
+              variant="secondary"
+              onClick={handleStartChat}
+              disabled={startingChat}
+            >
+              <FiMessageSquare /> {startingChat ? "Abrindo..." : "Conversar com a empresa"}
             </Button>
           )}
         </Card>
+      )}
+
+      {company && (
+        <ReviewSection companyId={company.id} isOwnCompany={isMine} />
       )}
 
       {related.length > 0 && (

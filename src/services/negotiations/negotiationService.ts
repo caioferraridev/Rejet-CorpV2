@@ -1,6 +1,7 @@
 import { supabase } from "../supabase/client";
 import type {
   Negotiation,
+  NegotiationHistoryEntry,
   NegotiationInput,
   NegotiationStats,
   NegotiationStatus,
@@ -95,6 +96,7 @@ export async function getNegotiationStats(
     em_negociacao: 0,
     aceito: 0,
     recusado: 0,
+    cancelado: 0,
     finalizado: 0,
   };
 
@@ -112,4 +114,18 @@ export async function getNegotiationStats(
     totalValue,
     completed: byStatus.finalizado,
   };
+}
+
+const HISTORY_SELECT = `id,negotiation_id,actor_id,previous_status,new_status,observation,created_at,
+actor:companies!negotiation_history_actor_id_fkey(id,company_name,logo_url)`;
+
+export async function listNegotiationHistory(negotiationId: string) {
+  const { data, error } = await supabase
+    .from("negotiation_history")
+    .select(HISTORY_SELECT)
+    .eq("negotiation_id", negotiationId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as NegotiationHistoryEntry[];
 }

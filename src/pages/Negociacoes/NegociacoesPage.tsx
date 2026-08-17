@@ -16,6 +16,7 @@ const STATUS_OPTIONS: { value: "" | NegotiationStatus; label: string }[] = [
   { value: "em_negociacao", label: "Em negociação" },
   { value: "aceito", label: "Aceito" },
   { value: "recusado", label: "Recusado" },
+  { value: "cancelado", label: "Cancelado" },
   { value: "finalizado", label: "Finalizado" },
 ];
 
@@ -27,6 +28,7 @@ const STATUS_VARIANT: Record<
   em_negociacao: "primary",
   aceito: "success",
   recusado: "danger",
+  cancelado: "warning",
   finalizado: "neutral",
 };
 

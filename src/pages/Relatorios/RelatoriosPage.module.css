@@ -135,7 +135,7 @@
 .statusRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   padding: 9px 12px;
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid var(--color-border);
@@ -151,6 +151,23 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--color-text);
+  min-width: 30px;
+  text-align: right;
+}
+
+.catBar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(36, 49, 39, 0.06);
+  overflow: hidden;
+}
+
+.catBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  transition: width 0.5s ease;
 }
 
 .tableWrap {

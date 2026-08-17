@@ -17,7 +17,13 @@ export async function signIn(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password });
 }
 
-export async function signUp(payload: SignUpPayload) {
+export interface SignUpResult {
+  data: { user: { id: string } | null; session: unknown | null };
+  error: { message: string } | null;
+  profileCreated: boolean;
+}
+
+export async function signUp(payload: SignUpPayload): Promise<SignUpResult> {
   const { data, error } = await supabase.auth.signUp({
     email: payload.email,
     password: payload.password,
@@ -29,30 +35,39 @@ export async function signUp(payload: SignUpPayload) {
     },
   });
 
-  if (error || !data.user) return { data, error };
+  if (error || !data.user) return { data, error, profileCreated: false };
 
-  const session = (await supabase.auth.getSession()).data.session;
+  let session = (await supabase.auth.getSession()).data.session;
+
+  if (!session) {
+    const { data: signInData } = await supabase.auth.signInWithPassword({
+      email: payload.email,
+      password: payload.password,
+    });
+    session = signInData.session;
+  }
 
   if (session) {
     await createCompanyProfile(session.user.id, payload);
-  } else {
-    localStorage.setItem(
-      "rejec_pending_company",
-      JSON.stringify({
-        id: data.user.id,
-        company_name: payload.company_name,
-        cnpj: payload.cnpj,
-        email: payload.email,
-        phone: payload.phone,
-        city: payload.city,
-        state: payload.state,
-        segment: payload.segment,
-        description: payload.description,
-      })
-    );
+    return { data, error: null, profileCreated: true };
   }
 
-  return { data, error };
+  localStorage.setItem(
+    "rejec_pending_company",
+    JSON.stringify({
+      id: data.user.id,
+      company_name: payload.company_name,
+      cnpj: payload.cnpj,
+      email: payload.email,
+      phone: payload.phone,
+      city: payload.city,
+      state: payload.state,
+      segment: payload.segment,
+      description: payload.description,
+    })
+  );
+
+  return { data, error: null, profileCreated: false };
 }
 
 export async function createCompanyProfile(

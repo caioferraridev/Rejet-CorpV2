@@ -62,7 +62,7 @@ export async function markOnboardingDone(id: string) {
 export async function getCompanyStats(id: string): Promise<CompanyStats> {
   const products = await supabase
     .from("produtos")
-    .select("id,status,price")
+    .select("id,status,price,views")
     .eq("created_by", id);
 
   const asBuyer = await supabase
@@ -75,15 +75,28 @@ export async function getCompanyStats(id: string): Promise<CompanyStats> {
     .select("id,status,offered_price")
     .eq("seller_id", id);
 
+  const favoritesResult = await supabase
+    .from("favorites")
+    .select("id", { count: "exact", head: true })
+    .in("product_id", (products.data ?? []).map((p) => p.id));
+
   const company = await getCompany(id);
 
   const items = products.data ?? [];
   const buyers = asBuyer.data ?? [];
   const sellers = asSeller.data ?? [];
 
+  const allNegotiations = [...buyers, ...sellers];
+  const pending = allNegotiations.filter(
+    (n) => n.status === "interesse" || n.status === "em_negociacao"
+  ).length;
+  const finished = allNegotiations.filter((n) => n.status === "finalizado").length;
+  const interestsReceived = sellers.filter((n) => n.status === "interesse").length;
+
   return {
     products: items.length,
     activeProducts: items.filter((p) => p.status === "active").length,
+    publishedProducts: items.filter((p) => p.status === "active" || p.status === "sold").length,
     sales: sellers.filter(
       (n) => n.status === "finalizado" || n.status === "aceito"
     ).length,
@@ -92,6 +105,11 @@ export async function getCompanyStats(id: string): Promise<CompanyStats> {
     ).length,
     averageRating: Number(company?.rating ?? 0),
     reviewCount: company?.review_count ?? 0,
-    totalNegotiations: buyers.length + sellers.length,
+    totalNegotiations: allNegotiations.length,
+    pendingNegotiations: pending,
+    finishedNegotiations: finished,
+    favoritesReceived: favoritesResult.count ?? 0,
+    interestsReceived,
+    totalViews: items.reduce((acc, p) => acc + (p.views ?? 0), 0),
   };
 }

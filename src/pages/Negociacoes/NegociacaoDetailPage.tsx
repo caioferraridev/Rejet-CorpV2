@@ -14,13 +14,23 @@ import {
 } from "../../components/ui";
 import {
   getNegotiation,
+  listNegotiationHistory,
   updateNegotiationStatus,
 } from "../../services/negotiations/negotiationService";
 import { getPublicUrl } from "../../services/storage/storageService";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../components/ui/Toast";
-import { formatCurrency, formatDateTime, formatQuantity } from "../../utils/format";
-import { NEGOTIATION_STATUS_LABELS, type Negotiation } from "../../types/negotiation";
+import { formatCurrency, formatDateTime, formatQuantity, timeAgo } from "../../utils/format";
+import { NEGOTIATION_STATUS_LABELS, type Negotiation, type NegotiationHistoryEntry, type NegotiationStatus } from "../../types/negotiation";
+
+const STATUS_VARIANT: Record<string, "primary" | "secondary" | "success" | "danger" | "warning" | "neutral"> = {
+  interesse: "secondary",
+  em_negociacao: "primary",
+  aceito: "success",
+  recusado: "danger",
+  cancelado: "warning",
+  finalizado: "neutral",
+};
 
 export default function NegociacaoDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +39,7 @@ export default function NegociacaoDetailPage() {
   const { success, error } = useToast();
 
   const [negotiation, setNegotiation] = useState<Negotiation | null>(null);
+  const [history, setHistory] = useState<NegotiationHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -36,10 +47,15 @@ export default function NegociacaoDetailPage() {
     if (!id) return;
     setLoading(true);
     try {
-      const data = await getNegotiation(id);
+      const [data, historyData] = await Promise.all([
+        getNegotiation(id),
+        listNegotiationHistory(id).catch(() => []),
+      ]);
       setNegotiation(data);
+      setHistory(historyData);
     } catch {
       setNegotiation(null);
+      setHistory([]);
     } finally {
       setLoading(false);
     }
@@ -70,13 +86,12 @@ export default function NegociacaoDetailPage() {
   const product = negotiation.product;
   const productImage = product ? getPublicUrl(product.main_image) : null;
 
-  const canAccept =
-    isSeller && (negotiation.status === "interesse" || negotiation.status === "em_negociacao");
-  const canFinalize = isSeller && negotiation.status === "aceito";
-  const canCancel =
-    isBuyer && (negotiation.status === "interesse" || negotiation.status === "em_negociacao");
+  const canRespond = isSeller && (negotiation.status === "interesse" || negotiation.status === "em_negociacao");
+  const canFinalize = (isSeller || isBuyer) && negotiation.status === "aceito";
+  const canCancel = (isBuyer || isSeller) && (negotiation.status === "interesse" || negotiation.status === "em_negociacao");
+  const canNegotiate = isSeller && negotiation.status === "interesse";
 
-  const changeStatus = async (next: "aceito" | "recusado" | "finalizado") => {
+  const changeStatus = async (next: NegotiationStatus) => {
     setUpdating(true);
     try {
       await updateNegotiationStatus(negotiation.id, next, negotiation.product_id);
@@ -102,13 +117,7 @@ export default function NegociacaoDetailPage() {
         <Card className={styles.mainCard}>
           <div className={styles.statusRow}>
             <Badge
-              variant={
-                negotiation.status === "aceito" || negotiation.status === "finalizado"
-                  ? "success"
-                  : negotiation.status === "recusado"
-                    ? "danger"
-                    : "secondary"
-              }
+              variant={STATUS_VARIANT[negotiation.status] ?? "neutral"}
             >
               {NEGOTIATION_STATUS_LABELS[negotiation.status]}
             </Badge>
@@ -167,9 +176,9 @@ export default function NegociacaoDetailPage() {
             </div>
           )}
 
-          {(canAccept || canFinalize || canCancel) && (
+          {(canRespond || canFinalize || canCancel) && (
             <div className={styles.actions}>
-              {canAccept && (
+              {canRespond && (
                 <>
                   <Button onClick={() => changeStatus("aceito")} disabled={updating}>
                     <FiCheck /> Aceitar proposta
@@ -180,6 +189,16 @@ export default function NegociacaoDetailPage() {
                 </>
               )}
 
+              {canNegotiate && (
+                <Button
+                  variant="secondary"
+                  onClick={() => changeStatus("em_negociacao")}
+                  disabled={updating}
+                >
+                  <FiMessageSquare /> Iniciar negociação
+                </Button>
+              )}
+
               {canFinalize && (
                 <Button onClick={() => changeStatus("finalizado")} disabled={updating}>
                   <FiCheck /> Finalizar negociação
@@ -187,40 +206,65 @@ export default function NegociacaoDetailPage() {
               )}
 
               {canCancel && (
-                <Button variant="danger" onClick={() => changeStatus("recusado")} disabled={updating}>
-                  <FiX /> Cancelar interesse
+                <Button variant="danger" onClick={() => changeStatus("cancelado")} disabled={updating}>
+                  <FiX /> Cancelar
                 </Button>
               )}
             </div>
           )}
         </Card>
 
-        <Card className={styles.sideCard}>
-          <h2 className={styles.sideTitle}>Outra parte</h2>
-          <div className={styles.party}>
-            <Avatar
-              src={other?.logo_url ?? null}
-              name={other?.company_name ?? "Empresa"}
-              size="lg"
-            />
-            <div>
-              <strong className={styles.partyName}>{other?.company_name ?? "Empresa"}</strong>
-              <span className={styles.partyMeta}>
-                {[other?.city, other?.state].filter(Boolean).join(", ") || "Localização não informada"}
-              </span>
-              <div className={styles.partyBadge}>
-                <Badge variant={isSeller ? "secondary" : "success"}>
-                  {isSeller ? "Comprador" : "Vendedor"}
-                </Badge>
-                {other?.verified && <Badge variant="success">Verificada</Badge>}
+        <div className={styles.sideColumn}>
+          <Card className={styles.sideCard}>
+            <h2 className={styles.sideTitle}>Outra parte</h2>
+            <div className={styles.party}>
+              <Avatar
+                src={other?.logo_url ?? null}
+                name={other?.company_name ?? "Empresa"}
+                size="lg"
+              />
+              <div>
+                <strong className={styles.partyName}>{other?.company_name ?? "Empresa"}</strong>
+                <span className={styles.partyMeta}>
+                  {[other?.city, other?.state].filter(Boolean).join(", ") || "Localização não informada"}
+                </span>
+                <div className={styles.partyBadge}>
+                  <Badge variant={isSeller ? "secondary" : "success"}>
+                    {isSeller ? "Comprador" : "Vendedor"}
+                  </Badge>
+                  {other?.verified && <Badge variant="success">Verificada</Badge>}
+                </div>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <Button to="/mensagens" variant="secondary" block>
-            <FiMessageSquare /> Conversar
-          </Button>
-        </Card>
+          {history.length > 0 && (
+            <Card title="Histórico" className={styles.sideCard}>
+              <div className={styles.timeline}>
+                {history.map((entry, index) => (
+                  <div key={entry.id} className={styles.timelineItem}>
+                    <div className={styles.timelineDot} />
+                    {index < history.length - 1 && <div className={styles.timelineLine} />}
+                    <div className={styles.timelineContent}>
+                      <div className={styles.timelineHeader}>
+                        <strong>{NEGOTIATION_STATUS_LABELS[entry.new_status as keyof typeof NEGOTIATION_STATUS_LABELS] ?? entry.new_status}</strong>
+                        <span className={styles.timelineTime}>{timeAgo(entry.created_at)}</span>
+                      </div>
+                      {entry.actor && (
+                        <span className={styles.timelineActor}>
+                          por {entry.actor.company_name}
+                        </span>
+                      )}
+                      {entry.observation && (
+                        <span className={styles.timelineObs}>{entry.observation}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -68,6 +68,7 @@ export default function ProductCard({
         <div className={styles.topRow}>
           <Badge variant={status.variant}>{status.label}</Badge>
           {product.is_free && <Badge variant="warning">Grátis</Badge>}
+          {product.negotiable && <Badge variant="primary">Negociável</Badge>}
         </div>
 
         <Link to={`/produto/${product.id}`} className={styles.title}>

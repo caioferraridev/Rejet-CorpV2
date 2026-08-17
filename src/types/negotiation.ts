@@ -6,6 +6,7 @@ export type NegotiationStatus =
   | "em_negociacao"
   | "aceito"
   | "recusado"
+  | "cancelado"
   | "finalizado";
 
 export const NEGOTIATION_STATUS_LABELS: Record<NegotiationStatus, string> = {
@@ -13,6 +14,7 @@ export const NEGOTIATION_STATUS_LABELS: Record<NegotiationStatus, string> = {
   em_negociacao: "Em negociação",
   aceito: "Aceito",
   recusado: "Recusado",
+  cancelado: "Cancelado",
   finalizado: "Finalizado",
 };
 
@@ -44,4 +46,15 @@ export interface NegotiationStats {
   byStatus: Record<NegotiationStatus, number>;
   totalValue: number;
   completed: number;
+}
+
+export interface NegotiationHistoryEntry {
+  id: string;
+  negotiation_id: string;
+  actor_id: string | null;
+  previous_status: string | null;
+  new_status: string;
+  observation: string | null;
+  created_at: string;
+  actor?: Pick<Company, "id" | "company_name" | "logo_url"> | null;
 }

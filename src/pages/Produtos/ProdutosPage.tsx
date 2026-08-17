@@ -4,7 +4,7 @@ import { FiPlusCircle } from "react-icons/fi";
 
 import styles from "./ProdutosPage.module.css";
 
-import { Button, EmptyState, Loader, Select } from "../../components/ui";
+import { Button, ConfirmDialog, EmptyState, Loader, Select } from "../../components/ui";
 import ProductCard from "../../components/product/ProductCard/ProductCard";
 import { deleteProduct, listMyProducts } from "../../services/products/productService";
 import { useAuth } from "../../contexts/AuthContext";
@@ -25,6 +25,7 @@ export default function ProdutosPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const navigate = useNavigate();
   const { success, error } = useToast();
@@ -46,10 +47,14 @@ export default function ProdutosPage() {
     void refresh();
   }, [refresh]);
 
-  async function handleDelete(product: Product) {
-    if (!window.confirm(`Excluir o produto "${product.product}"? Esta ação não pode ser desfeita.`)) {
-      return;
-    }
+  function handleDelete(product: Product) {
+    setProductToDelete(product);
+  }
+
+  async function confirmDelete() {
+    if (!productToDelete) return;
+    const product = productToDelete;
+    setProductToDelete(null);
     try {
       await deleteProduct(product.id);
       setProducts((current) => current.filter((item) => item.id !== product.id));
@@ -113,6 +118,15 @@ export default function ProdutosPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={productToDelete !== null}
+        title="Excluir produto"
+        message={`Excluir o produto "${productToDelete?.product}"? Esta ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setProductToDelete(null)}
+      />
     </div>
   );
 }

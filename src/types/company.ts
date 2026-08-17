@@ -50,9 +50,15 @@ export interface CompanyInput {
 export interface CompanyStats {
   products: number;
   activeProducts: number;
+  publishedProducts: number;
   sales: number;
   purchases: number;
   averageRating: number;
   reviewCount: number;
   totalNegotiations: number;
+  pendingNegotiations: number;
+  finishedNegotiations: number;
+  favoritesReceived: number;
+  interestsReceived: number;
+  totalViews: number;
 }

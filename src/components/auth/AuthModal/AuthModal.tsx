@@ -117,7 +117,7 @@ export default function AuthModal({ open, onClose, mode = "login" }: Props) {
 
     setSubmitting(true);
     try {
-      const { data, error: signUpError } = await signUp({
+      const { error: signUpError, profileCreated } = await signUp({
         company_name: companyName.trim(),
         cnpj: cnpjLimpo,
         email: registerEmail,
@@ -129,9 +129,7 @@ export default function AuthModal({ open, onClose, mode = "login" }: Props) {
         return;
       }
 
-      if (!data.session) {
-        info("Cadastro criado! Verifique seu e-mail para confirmar e ativar a conta.");
-      } else {
+      if (profileCreated) {
         success("Cadastro realizado com sucesso!");
         setCompanyName("");
         setCnpj("");
@@ -141,6 +139,8 @@ export default function AuthModal({ open, onClose, mode = "login" }: Props) {
         setView("login");
         onClose();
         navigate("/dashboard");
+      } else {
+        info("Cadastro criado! Verifique seu e-mail para confirmar e ativar a conta.");
       }
     } catch {
       setFormError("Erro inesperado ao registrar. Tente novamente.");

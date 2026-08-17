@@ -6,8 +6,11 @@ import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { ToastProvider } from "./components/ui";
+import { applySavedDarkMode } from "./hooks/useDarkMode";
 
 import "./styles/global.css";
+
+applySavedDarkMode();
 
 ReactDOM.createRoot(
   document.getElementById("root")!

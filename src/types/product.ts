@@ -73,11 +73,13 @@ export interface ProductInput {
 export interface ProductFilters {
   query?: string;
   category?: string;
+  subcategory?: string;
   material_type?: string;
   state?: string;
   city?: string;
   condition?: string;
   is_free?: boolean;
+  negotiable?: boolean;
   min_price?: number;
   max_price?: number;
   sort?: "recent" | "price_asc" | "price_desc" | "popular";

@@ -334,7 +334,11 @@ export default function CadastroProdutoPage() {
       }
       navigate(`/produto/${editId}`);
     } catch (err) {
-      error(err instanceof Error ? err.message : "Falha ao salvar o produto.");
+      const msg =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: string }).message)
+          : "Falha ao salvar o produto.";
+      error(msg);
     }
   }
 

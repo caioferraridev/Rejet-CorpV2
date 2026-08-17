@@ -16,3 +16,4 @@ export { EmptyState } from "./EmptyState";
 export { StarRating } from "./StarRating";
 export { ImageUploader } from "./ImageUploader";
 export { ToastProvider, useToast } from "./Toast";
+export { ConfirmDialog } from "./ConfirmDialog";

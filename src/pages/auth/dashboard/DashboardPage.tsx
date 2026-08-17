@@ -4,7 +4,11 @@ import {
   FiBarChart2,
   FiBriefcase,
   FiEye,
+  FiHeart,
   FiMapPin,
+  FiMessageSquare,
+  FiPackage,
+  FiPercent,
   FiPlusCircle,
   FiShoppingBag,
   FiShoppingCart,
@@ -20,6 +24,8 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import { getCompanyStats } from "../../../services/companies/companyService";
 import { listMyProducts } from "../../../services/products/productService";
+import { listNegotiations } from "../../../services/negotiations/negotiationService";
+import { listUserActivities, getActivityLabel } from "../../../services/activity/activityService";
 import {
   formatCNPJ,
   formatCurrency,
@@ -30,15 +36,38 @@ import {
 import { NOTIFICATION_ICONS } from "../../../types/notification";
 import type { CompanyStats } from "../../../types/company";
 import type { Product } from "../../../types/product";
+import type { Negotiation, NegotiationStatus } from "../../../types/negotiation";
+import type { ActivityLog } from "../../../types/activity";
+
+const STATUS_VARIANT: Record<NegotiationStatus, "primary" | "secondary" | "success" | "danger" | "neutral"> = {
+  interesse: "secondary",
+  em_negociacao: "primary",
+  aceito: "success",
+  recusado: "danger",
+  cancelado: "danger",
+  finalizado: "neutral",
+};
+
+const STATUS_LABEL: Record<NegotiationStatus, string> = {
+  interesse: "Interesse",
+  em_negociacao: "Em negociação",
+  aceito: "Aceito",
+  recusado: "Recusado",
+  cancelado: "Cancelado",
+  finalizado: "Finalizado",
+};
 
 export default function DashboardPage() {
   const { profile, user } = useAuth();
   const { notifications, unreadCount } = useNotifications();
 
   const companyId = profile?.id ?? user?.id ?? null;
+  const currentUserId = companyId;
 
   const [stats, setStats] = useState<CompanyStats | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [recentNegotiations, setRecentNegotiations] = useState<Negotiation[]>([]);
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   const today = useMemo(
@@ -56,15 +85,21 @@ export default function DashboardPage() {
     if (!companyId) return;
     setLoading(true);
     try {
-      const [companyStats, myProducts] = await Promise.all([
+      const [companyStats, myProducts, negotiations, userActivities] = await Promise.all([
         getCompanyStats(companyId),
         listMyProducts(companyId),
+        listNegotiations(companyId),
+        listUserActivities(companyId, 8),
       ]);
       setStats(companyStats);
       setProducts(myProducts);
+      setRecentNegotiations(negotiations);
+      setActivities(userActivities);
     } catch {
       setStats(null);
       setProducts([]);
+      setRecentNegotiations([]);
+      setActivities([]);
     } finally {
       setLoading(false);
     }
@@ -76,6 +111,11 @@ export default function DashboardPage() {
 
   const totalViews = useMemo(
     () => products.reduce((acc, product) => acc + (product.views ?? 0), 0),
+    [products]
+  );
+
+  const publishedCount = useMemo(
+    () => products.filter((p) => p.status === "active" || p.status === "sold").length,
     [products]
   );
 
@@ -93,6 +133,42 @@ export default function DashboardPage() {
     }));
   }, [products]);
 
+  const negotiationsByStatus = useMemo(() => {
+    const counts: Record<string, number> = {
+      interesse: 0,
+      em_negociacao: 0,
+      aceito: 0,
+      recusado: 0,
+      finalizado: 0,
+    };
+    recentNegotiations.forEach((n) => {
+      counts[n.status] = (counts[n.status] ?? 0) + 1;
+    });
+    return counts;
+  }, [recentNegotiations]);
+
+  const profileCompleteness = useMemo(() => {
+    if (!profile) return 0;
+    const fields = [
+      profile.company_name,
+      profile.cnpj,
+      profile.email,
+      profile.phone,
+      profile.city,
+      profile.state,
+      profile.segment,
+      profile.description,
+      profile.logo_url,
+    ];
+    const filled = fields.filter((f) => f && f.trim && f.trim() !== "").length;
+    return Math.round((filled / fields.length) * 100);
+  }, [profile]);
+
+  const publishedProducts = useMemo(
+    () => products.filter((p) => p.status === "active").slice(0, 5),
+    [products]
+  );
+
   if (loading) {
     return <Loader text="Carregando seu painel..." fullPage />;
   }
@@ -102,11 +178,10 @@ export default function DashboardPage() {
       <div className={styles.hero}>
         <div>
           <h1 className={styles.greeting}>
-            Olá, {profile?.company_name ?? "empresa"} 👋
+            Olá, {profile?.company_name?.split(" ")[0] ?? "empresa"} 👋
           </h1>
           <p className={styles.date}>{today}</p>
         </div>
-
         <Button to="/cadastrar-produto">
           <FiPlusCircle /> Cadastrar produto
         </Button>
@@ -115,7 +190,7 @@ export default function DashboardPage() {
       <div className={styles.statsGrid}>
         <Card className={styles.statCard}>
           <span className={`${styles.statIcon} ${styles.iconGreen}`}>
-            <FiShoppingBag />
+            <FiPackage />
           </span>
           <div>
             <strong>{formatNumber(stats?.activeProducts)}</strong>
@@ -125,11 +200,21 @@ export default function DashboardPage() {
 
         <Card className={styles.statCard}>
           <span className={`${styles.statIcon} ${styles.iconBlue}`}>
+            <FiShoppingBag />
+          </span>
+          <div>
+            <strong>{formatNumber(publishedCount)}</strong>
+            <span>Publicados</span>
+          </div>
+        </Card>
+
+        <Card className={styles.statCard}>
+          <span className={`${styles.statIcon} ${styles.iconOrange}`}>
             <FiBriefcase />
           </span>
           <div>
-            <strong>{formatNumber(stats?.totalNegotiations)}</strong>
-            <span>Negociações</span>
+            <strong>{formatNumber(stats?.pendingNegotiations)}</strong>
+            <span>Em andamento</span>
           </div>
         </Card>
 
@@ -168,8 +253,18 @@ export default function DashboardPage() {
             <FiEye />
           </span>
           <div>
-            <strong>{formatNumber(totalViews)}</strong>
+            <strong>{formatNumber(stats?.totalViews ?? totalViews)}</strong>
             <span>Visualizações</span>
+          </div>
+        </Card>
+
+        <Card className={styles.statCard}>
+          <span className={`${styles.statIcon} ${styles.iconRed}`}>
+            <FiHeart />
+          </span>
+          <div>
+            <strong>{formatNumber(stats?.favoritesReceived)}</strong>
+            <span>Favoritos recebidos</span>
           </div>
         </Card>
       </div>
@@ -208,6 +303,20 @@ export default function DashboardPage() {
               )}
             </div>
 
+            <div className={styles.completeness}>
+              <div className={styles.completenessHeader}>
+                <FiPercent size={14} />
+                <span>Perfil completo</span>
+                <strong>{profileCompleteness}%</strong>
+              </div>
+              <div className={styles.progressBar}>
+                <div
+                  className={styles.progressFill}
+                  style={{ width: `${profileCompleteness}%` }}
+                />
+              </div>
+            </div>
+
             <div className={styles.profileActions}>
               <Button to="/perfil" variant="outline" size="sm">
                 <FiUser /> Editar perfil
@@ -216,6 +325,36 @@ export default function DashboardPage() {
                 Ver marketplace
               </Button>
             </div>
+          </Card>
+
+          <Card title="Negociações por status">
+            {recentNegotiations.length === 0 ? (
+              <p className={styles.emptyText}>Sem negociações ainda.</p>
+            ) : (
+              <div className={styles.statusBars}>
+                {(["interesse", "em_negociacao", "aceito", "finalizado", "recusado"] as NegotiationStatus[]).map(
+                  (status) => {
+                    const count = negotiationsByStatus[status] ?? 0;
+                    const maxCount = Math.max(1, ...Object.values(negotiationsByStatus));
+                    const pct = Math.round((count / maxCount) * 100);
+                    return (
+                      <div key={status} className={styles.statusBar}>
+                        <div className={styles.statusBarLabel}>
+                          <span>{STATUS_LABEL[status]}</span>
+                          <strong>{count}</strong>
+                        </div>
+                        <div className={styles.statusBarTrack}>
+                          <div
+                            className={`${styles.statusBarFill} ${styles[`fill${status.charAt(0).toUpperCase() + status.slice(1)}`]}`}
+                            style={{ width: `${count > 0 ? pct : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            )}
           </Card>
 
           <Card title="Atalhos rápidos">
@@ -227,7 +366,7 @@ export default function DashboardPage() {
                 <FiBriefcase /> Negociações
               </Link>
               <Link to="/mensagens" className={styles.shortcut}>
-                <FiShoppingCart /> Mensagens
+                <FiMessageSquare /> Mensagens
               </Link>
               <Link to="/relatorios" className={styles.shortcut}>
                 <FiBarChart2 /> Relatórios
@@ -236,41 +375,106 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <Card title="Notificações recentes" className={styles.notifCard}>
-          {unreadCount > 0 && (
-            <Link to="/notificacoes" className={styles.unreadLink}>
-              Você tem {unreadCount} não lida{unreadCount > 1 ? "s" : ""}
-            </Link>
-          )}
+        <div className={styles.mainColumn}>
+          <Card title="Notificações recentes" className={styles.notifCard}>
+            {unreadCount > 0 && (
+              <Link to="/notificacoes" className={styles.unreadLink}>
+                Você tem {unreadCount} não lida{unreadCount > 1 ? "s" : ""}
+              </Link>
+            )}
 
-          {notifications.length === 0 ? (
-            <p className={styles.emptyText}>Nenhuma notificação por aqui.</p>
-          ) : (
-            <ul className={styles.notifList}>
-              {notifications.slice(0, 5).map((notification) => (
-                <li key={notification.id}>
-                  <span className={styles.notifIcon}>
-                    {NOTIFICATION_ICONS[notification.type]}
-                  </span>
-                  <div className={styles.notifBody}>
-                    <span className={styles.notifTitle}>{notification.title}</span>
-                    {notification.message && (
-                      <span className={styles.notifMsg}>{notification.message}</span>
-                    )}
-                    <span className={styles.notifTime}>
-                      {timeAgo(notification.created_at)}
+            {notifications.length === 0 ? (
+              <p className={styles.emptyText}>Nenhuma notificação por aqui.</p>
+            ) : (
+              <ul className={styles.notifList}>
+                {notifications.slice(0, 5).map((notification) => (
+                  <li key={notification.id}>
+                    <span className={styles.notifIcon}>
+                      {NOTIFICATION_ICONS[notification.type]}
                     </span>
-                  </div>
-                  {!notification.read && <span className={styles.dot} />}
-                </li>
-              ))}
-            </ul>
-          )}
+                    <div className={styles.notifBody}>
+                      <span className={styles.notifTitle}>{notification.title}</span>
+                      {notification.message && (
+                        <span className={styles.notifMsg}>{notification.message}</span>
+                      )}
+                      <span className={styles.notifTime}>
+                        {timeAgo(notification.created_at)}
+                      </span>
+                    </div>
+                    {!notification.read && <span className={styles.dot} />}
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          <Link to="/notificacoes" className={styles.seeAll}>
-            Ver todas as notificações
-          </Link>
-        </Card>
+            <Link to="/notificacoes" className={styles.seeAll}>
+              Ver todas as notificações
+            </Link>
+          </Card>
+
+          <Card title="Negociações recentes">
+            {recentNegotiations.length === 0 ? (
+              <p className={styles.emptyText}>Nenhuma negociação ainda.</p>
+            ) : (
+              <ul className={styles.negoList}>
+                {recentNegotiations.slice(0, 5).map((negotiation) => (
+                  <li key={negotiation.id}>
+                    <Link to={`/negociacoes/${negotiation.id}`} className={styles.negoItem}>
+                      <Avatar
+                        src={(currentUserId && negotiation.buyer_id === currentUserId
+                          ? negotiation.seller?.logo_url
+                          : negotiation.buyer?.logo_url) ?? null}
+                        name={(currentUserId && negotiation.buyer_id === currentUserId
+                          ? negotiation.seller?.company_name
+                          : negotiation.buyer?.company_name) ?? "Empresa"}
+                        size="sm"
+                      />
+                      <div className={styles.negoInfo}>
+                        <div className={styles.negoTop}>
+                          <strong>{negotiation.product?.product ?? "Produto"}</strong>
+                          <Badge variant={STATUS_VARIANT[negotiation.status]}>
+                            {STATUS_LABEL[negotiation.status]}
+                          </Badge>
+                        </div>
+                        <span className={styles.negoMeta}>
+                          {formatCurrency(negotiation.offered_price)} · {timeAgo(negotiation.updated_at)}
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {recentNegotiations.length > 0 && (
+              <Link to="/negociacoes" className={styles.seeAll}>
+                Ver todas as negociações
+              </Link>
+            )}
+          </Card>
+
+          <Card title="Atividades recentes">
+            {activities.length === 0 ? (
+              <p className={styles.emptyText}>Nenhuma atividade registrada.</p>
+            ) : (
+              <ul className={styles.activityList}>
+                {activities.map((activity) => (
+                  <li key={activity.id} className={styles.activityItem}>
+                    <span className={styles.activityDot} />
+                    <div className={styles.activityContent}>
+                      <strong>{getActivityLabel(activity.action)}</strong>
+                      {activity.details && (
+                        <span className={styles.activityDetails}>{activity.details}</span>
+                      )}
+                      <span className={styles.activityTime}>
+                        {timeAgo(activity.created_at)}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
       </div>
 
       <div className={styles.lowerGrid}>
@@ -294,11 +498,8 @@ export default function DashboardPage() {
           )}
         </Card>
 
-        <Card
-          title="Meus produtos"
-          className={styles.productsCard}
-        >
-          {products.length === 0 ? (
+        <Card title="Meus produtos" className={styles.productsCard}>
+          {publishedProducts.length === 0 ? (
             <div className={styles.emptyProducts}>
               <p className={styles.emptyText}>
                 Você ainda não publicou nenhum produto.
@@ -309,12 +510,26 @@ export default function DashboardPage() {
             </div>
           ) : (
             <ul className={styles.productList}>
-              {products.slice(0, 5).map((product) => (
+              {publishedProducts.map((product) => (
                 <li key={product.id} className={styles.productRow}>
-                  <span className={styles.productName}>{product.product}</span>
-                  <span className={styles.productQty}>
-                    {formatNumber(product.quantities)} {product.unit}
-                  </span>
+                  <Link to={`/produto/${product.id}`} className={styles.productLink}>
+                    <div className={styles.productThumb}>
+                      {product.main_image ? (
+                        <img
+                          src={product.main_image}
+                          alt={product.product}
+                        />
+                      ) : (
+                        <FiPackage size={16} />
+                      )}
+                    </div>
+                    <div className={styles.productInfo}>
+                      <span className={styles.productName}>{product.product}</span>
+                      <span className={styles.productMeta}>
+                        {formatNumber(product.quantities)} {product.unit} · <FiEye size={11} /> {product.views ?? 0}
+                      </span>
+                    </div>
+                  </Link>
                   <span className={styles.productPrice}>
                     {formatCurrency(product.price)}
                   </span>
@@ -336,6 +551,11 @@ export default function DashboardPage() {
                 </li>
               ))}
             </ul>
+          )}
+          {products.length > 5 && (
+            <Link to="/produtos" className={styles.seeAll}>
+              Ver todos os produtos
+            </Link>
           )}
         </Card>
       </div>

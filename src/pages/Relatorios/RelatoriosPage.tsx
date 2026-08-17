@@ -80,6 +80,23 @@ export default function RelatoriosPage() {
     }));
   }, [products]);
 
+  const categoryChart = useMemo(() => {
+    const counts: Record<string, number> = {};
+    products.forEach((product) => {
+      const cat = product.category ?? "Sem categoria";
+      counts[cat] = (counts[cat] ?? 0) + 1;
+    });
+    const sorted = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6);
+    const max = Math.max(1, ...sorted.map(([, c]) => c));
+    return sorted.map(([name, count]) => ({
+      name,
+      count,
+      pct: Math.round((count / max) * 100),
+    }));
+  }, [products]);
+
   function exportProducts() {
     downloadCSV("relatorio-produtos.csv", [
       "Produto",
@@ -188,6 +205,18 @@ export default function RelatoriosPage() {
             <strong>{Number(stats?.averageRating ?? 0).toFixed(1)}</strong>
             <span>Avaliação média</span>
           </Card>
+          <Card className={styles.stat}>
+            <strong>
+              {negStats && negStats.total > 0
+                ? `${Math.round((negStats.completed / negStats.total) * 100)}%`
+                : "0%"}
+            </strong>
+            <span>Taxa de conversão</span>
+          </Card>
+          <Card className={styles.stat}>
+            <strong>{formatNumber(stats?.favoritesReceived)}</strong>
+            <span>Favoritos recebidos</span>
+          </Card>
         </div>
 
         <div className={styles.columns}>
@@ -226,6 +255,24 @@ export default function RelatoriosPage() {
             )}
           </Card>
         </div>
+
+        <Card title="Produtos por categoria">
+          {categoryChart.length === 0 ? (
+            <p className={styles.emptyText}>Nenhum produto para categorizar.</p>
+          ) : (
+            <div className={styles.statusList}>
+              {categoryChart.map((cat) => (
+                <div key={cat.name} className={styles.statusRow}>
+                  <span className={styles.statusLabel}>{cat.name}</span>
+                  <div className={styles.catBar}>
+                    <div className={styles.catBarFill} style={{ width: `${cat.pct}%` }} />
+                  </div>
+                  <span className={styles.statusValue}>{cat.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
 
         <Card title="Últimas negociações">
           {negotiations.length === 0 ? (

@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 
 import styles from "./ConfigPage.module.css";
 
-import { Button, Card, Input, Select, Switch } from "../../components/ui";
+import { Button, Card, Input, Switch } from "../../components/ui";
 import { useSettings } from "../../hooks/useSettings";
+import { setDarkMode as applyDarkMode } from "../../hooks/useDarkMode";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../components/ui/Toast";
 import { signOut, updatePassword, updateEmail } from "../../services/auth/authService";
@@ -26,7 +27,6 @@ export default function ConfigPage() {
 
   const [tab, setTab] = useState<Tab>("conta");
   const [darkMode, setDarkMode] = useState(false);
-  const [language, setLanguage] = useState("pt-BR");
   const [notifyMessages, setNotifyMessages] = useState(true);
   const [notifyInterests, setNotifyInterests] = useState(true);
   const [notifyNegotiations, setNotifyNegotiations] = useState(true);
@@ -40,7 +40,6 @@ export default function ConfigPage() {
   useEffect(() => {
     if (!settings) return;
     setDarkMode(settings.dark_mode);
-    setLanguage(settings.language);
     setNotifyMessages(settings.notify_messages);
     setNotifyInterests(settings.notify_interests);
     setNotifyNegotiations(settings.notify_negotiations);
@@ -50,8 +49,10 @@ export default function ConfigPage() {
 
   async function saveAppearance() {
     const ok = await save({ dark_mode: darkMode });
-    if (ok) success("Aparência salva.");
-    else error("Falha ao salvar aparência.");
+    if (ok) {
+      applyDarkMode(darkMode);
+      success("Aparência salva.");
+    } else error("Falha ao salvar aparência.");
   }
 
   async function saveNotifications() {
@@ -66,7 +67,7 @@ export default function ConfigPage() {
   }
 
   async function savePreferences() {
-    const ok = await save({ language, privacy_profile: privacyProfile });
+    const ok = await save({ privacy_profile: privacyProfile });
     if (ok) success("Preferências salvas.");
     else error("Falha ao salvar preferências.");
   }
@@ -255,18 +256,6 @@ export default function ConfigPage() {
                 <p className={styles.loading}>Carregando preferências...</p>
               ) : (
                 <>
-                  <Select
-                    label="Idioma"
-                    name="language"
-                    value={language}
-                    onChange={(event) => setLanguage(event.target.value)}
-                    options={[
-                      { value: "pt-BR", label: "Português (Brasil)" },
-                      { value: "en", label: "English" },
-                      { value: "es", label: "Español" },
-                    ]}
-                  />
-
                   <div className={styles.switchRow}>
                     <Switch
                       label="Perfil visível publicamente"
