@@ -6,7 +6,7 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(36, 49, 39, 0.32);
+  background: rgba(36, 49, 39, 0.4);
   backdrop-filter: blur(2px);
   z-index: 190;
 }
@@ -18,21 +18,26 @@
   flex-direction: column;
 }
 
+/* Desktop: conteúdo ao lado da navegação persistente */
+@media (min-width: 861px) {
+  .main {
+    margin-left: var(--sidebar-width);
+  }
+}
+
 .topbar {
   position: sticky;
   top: 0;
   z-index: 150;
-  background: rgba(250, 247, 240, 0.85);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  background: var(--panel);
   border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 8px 24px rgba(36, 49, 39, 0.04);
+  box-shadow: var(--shadow-xs);
 }
 
 .topbarInner {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 14px 20px;
+  padding: 14px 24px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -44,25 +49,31 @@
   height: 42px;
   border-radius: 50%;
   border: 1px solid var(--color-border);
-  background: var(--color-surface-strong);
+  background: var(--panel);
   color: var(--color-text);
   cursor: pointer;
   align-items: center;
   justify-content: center;
   font-size: 19px;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .menuBtn:hover {
-  background: rgba(116, 203, 227, 0.12);
-  color: var(--color-secondary-dark);
+  background: var(--panel-sunken);
+  color: var(--color-text);
+}
+
+.menuBtn:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .pageTitle {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--color-text);
   white-space: nowrap;
+  letter-spacing: -0.01em;
 }
 
 .search {
@@ -72,17 +83,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--color-surface-strong);
-  border: 1px solid var(--color-border);
+  background: var(--panel-soft);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-pill);
-  padding: 8px 14px;
+  padding: 8px 16px;
   color: var(--color-text-soft);
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .search:focus-within {
-  border-color: rgba(116, 203, 227, 0.55);
-  box-shadow: 0 0 0 4px rgba(116, 203, 227, 0.12);
+  background: var(--panel);
+  border-color: var(--color-secondary-dark);
+  box-shadow: var(--ring);
 }
 
 .search input {
@@ -96,6 +108,10 @@
 
 .search input::placeholder {
   color: #7d8b80;
+}
+
+[data-theme="dark"] .search input::placeholder {
+  color: #8b978c;
 }
 
 .actions {
@@ -114,20 +130,26 @@
   height: 42px;
   border-radius: 50%;
   border: 1px solid var(--color-border);
-  background: var(--color-surface-strong);
+  background: var(--panel);
   color: var(--color-text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .iconBtn:hover,
 .iconBtnActive {
-  background: rgba(116, 203, 227, 0.12);
+  background: var(--color-secondary-soft);
   color: var(--color-secondary-dark);
+}
+
+.iconBtn:focus-visible,
+.userBtn:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .badge {
@@ -145,6 +167,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 0 2px var(--panel);
 }
 
 .userBtn {
@@ -154,14 +177,14 @@
   padding: 5px 12px 5px 5px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-border);
-  background: var(--color-surface-strong);
+  background: var(--panel);
   color: var(--color-text);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .userBtn:hover {
-  background: rgba(116, 203, 227, 0.1);
+  background: var(--panel-sunken);
 }
 
 .userName {
@@ -180,21 +203,19 @@
   right: 0;
   width: 340px;
   max-width: calc(100vw - 32px);
-  background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: var(--panel);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 24px 60px rgba(36, 49, 39, 0.2);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
-  animation: appDrop 0.22s ease;
+  animation: appDrop 0.2s ease;
   z-index: 210;
 }
 
 @keyframes appDrop {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;
@@ -223,10 +244,17 @@
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
 }
 
 .dropdownHeader button:hover {
   text-decoration: underline;
+}
+
+.dropdownHeader button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 1px;
 }
 
 .dropdownList {
@@ -245,23 +273,28 @@
   display: flex;
   gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(36, 49, 39, 0.05);
-  transition: var(--transition);
+  border-bottom: 1px solid var(--color-border);
+  transition: var(--transition-fast);
+}
+
+.notifItem:last-child {
+  border-bottom: none;
 }
 
 .notifItem:hover {
-  background: rgba(116, 203, 227, 0.08);
+  background: var(--panel-sunken);
 }
 
 .notifIcon {
   width: 38px;
   height: 38px;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(168, 198, 134, 0.2);
+  background: var(--color-primary-soft);
+  color: var(--tone-green-strong);
   font-size: 17px;
 }
 
@@ -297,6 +330,7 @@
   padding: 12px 16px;
   border-top: 1px solid var(--color-border);
   text-align: center;
+  background: var(--panel-soft);
 }
 
 .dropdownFooter a {
@@ -315,6 +349,7 @@
   gap: 12px;
   padding: 16px;
   border-bottom: 1px solid var(--color-border);
+  background: var(--panel-soft);
 }
 
 .userCardName {
@@ -342,24 +377,30 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 11px 12px;
+  padding: 10px 12px;
   border: none;
   background: none;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   color: var(--color-text);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   text-align: left;
   width: 100%;
 }
 
 .userMenu a:hover,
 .userMenu button:hover {
-  background: rgba(116, 203, 227, 0.12);
+  background: var(--panel-sunken);
   color: var(--color-secondary-dark);
+}
+
+.userMenu a:focus-visible,
+.userMenu button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: -2px;
 }
 
 .userMenu button {
@@ -377,7 +418,7 @@
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 28px 20px 48px;
+  padding: 28px 24px 56px;
 }
 
 @media (max-width: 860px) {
@@ -398,9 +439,34 @@
 
   .topbarInner {
     flex-wrap: wrap;
+    padding: 12px 16px;
   }
 
   .userName {
     display: none;
+  }
+
+  .content {
+    padding: 20px 16px 44px;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbarInner {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .actions {
+    gap: 6px;
+  }
+
+  .iconBtn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .content {
+    padding: 16px 12px 40px;
   }
 }

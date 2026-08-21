@@ -17,6 +17,7 @@
   font-size: 26px;
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
@@ -35,19 +36,18 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: var(--color-surface);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  border: 1px solid var(--color-border-soft);
+  background: var(--panel);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 12px 30px var(--color-shadow);
+  box-shadow: var(--shadow-sm);
   padding: 22px;
 }
 
 .sectionTitle {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: -0.01em;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--color-border);
 }
@@ -66,6 +66,10 @@
   font-weight: 600;
   color: var(--color-text);
   cursor: pointer;
+}
+
+.freeCheck input {
+  accent-color: var(--color-primary-dark);
 }
 
 .logistics {
@@ -101,10 +105,10 @@
 .galleryItem {
   position: relative;
   aspect-ratio: 1 / 1;
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  background: var(--color-surface-strong);
+  background: var(--panel-soft);
 }
 
 .galleryItem img {
@@ -152,11 +156,16 @@
   background: rgba(36, 49, 39, 0.72);
   color: var(--color-white);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .galleryActions button:hover {
   background: var(--color-danger);
+}
+
+.galleryActions button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .uploadingLabel,
@@ -183,13 +192,13 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: 2px dashed var(--color-border);
-  border-radius: var(--radius-sm);
+  border: 2px dashed var(--border-strong);
+  border-radius: 12px;
   color: var(--color-text-soft);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   text-align: center;
   padding: 8px;
 }
@@ -198,6 +207,11 @@
   border-color: var(--color-primary-dark);
   color: var(--color-primary-dark);
   background: var(--color-primary-soft);
+}
+
+.addImage:focus-within {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .hiddenInput {

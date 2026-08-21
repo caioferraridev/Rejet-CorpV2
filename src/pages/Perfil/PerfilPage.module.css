@@ -17,6 +17,7 @@
   font-size: 26px;
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
 .headerBadges {
@@ -34,7 +35,7 @@
 .banner {
   position: relative;
   height: 160px;
-  background: linear-gradient(135deg, rgba(168, 198, 134, 0.25), rgba(116, 203, 227, 0.2));
+  background: linear-gradient(135deg, rgba(168, 198, 134, 0.35), rgba(116, 203, 227, 0.28));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,20 +52,25 @@
   position: absolute;
   bottom: 12px;
   right: 12px;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.94);
+  color: #243127;
   font-size: 12.5px;
   font-weight: 600;
   padding: 8px 14px;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(36, 49, 39, 0.18);
-  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
 }
 
 .bannerUpload:hover {
   background: var(--color-white);
   transform: translateY(-1px);
+}
+
+.bannerUpload:focus-within {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .bannerUpload input,
@@ -112,17 +118,22 @@
   padding: 8px 14px;
   border: 1px solid rgba(116, 203, 227, 0.35);
   border-radius: var(--radius-pill);
-  background: rgba(116, 203, 227, 0.1);
+  background: var(--color-secondary-soft);
   color: var(--color-secondary-dark);
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   width: fit-content;
 }
 
 .logoUpload:hover {
   background: rgba(116, 203, 227, 0.2);
+}
+
+.logoUpload:focus-within {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .card {
@@ -141,6 +152,13 @@
 .actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.page a:focus-visible,
+.page button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 @media (max-width: 560px) {

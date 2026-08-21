@@ -16,6 +16,7 @@
   font-size: 26px;
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
@@ -39,8 +40,16 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--color-secondary-dark);
+  padding: 6px 10px;
+  border-radius: 8px;
 }
 
 .continue:hover {
   text-decoration: underline;
+}
+
+.page a:focus-visible,
+.page button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }

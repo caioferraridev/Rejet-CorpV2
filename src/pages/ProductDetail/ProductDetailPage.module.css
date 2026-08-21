@@ -4,6 +4,13 @@
   gap: 24px;
 }
 
+.page a:focus-visible,
+.page button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(320px, 1fr) 1fr;
@@ -21,9 +28,9 @@
   aspect-ratio: 4 / 3;
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--color-border-soft);
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 12px 30px var(--color-shadow);
+  border: 1px solid var(--color-border);
+  background: var(--panel-soft);
+  box-shadow: var(--shadow-sm);
 }
 
 .mainImage img {
@@ -52,13 +59,13 @@
 .thumb {
   width: 72px;
   height: 60px;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   border: 2px solid transparent;
   overflow: hidden;
   padding: 0;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.5);
-  transition: var(--transition);
+  background: var(--panel-soft);
+  transition: var(--transition-fast);
 }
 
 .thumb img {
@@ -67,9 +74,14 @@
   object-fit: cover;
 }
 
-.thumbActive {
+.thumb:hover {
+  border-color: rgba(116, 203, 227, 0.45);
+}
+
+.thumbActive,
+.thumbActive:hover {
   border-color: var(--color-secondary);
-  box-shadow: 0 0 0 3px rgba(116, 203, 227, 0.2);
+  box-shadow: 0 0 0 3px rgba(116, 203, 227, 0.22);
 }
 
 .info {
@@ -89,12 +101,14 @@
   font-weight: 700;
   color: var(--color-text);
   line-height: 1.25;
+  letter-spacing: -0.02em;
 }
 
 .price {
   font-size: 30px;
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
 .metaGrid {
@@ -107,9 +121,9 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--panel-soft);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   padding: 12px 14px;
 }
 
@@ -171,14 +185,14 @@
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  background: rgba(116, 203, 227, 0.1);
-  border: 1px solid rgba(116, 203, 227, 0.25);
+  border-radius: var(--radius-pill);
+  background: var(--color-secondary-soft);
+  border: 1px solid rgba(116, 203, 227, 0.3);
   color: var(--color-secondary-dark);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .docLink:hover {

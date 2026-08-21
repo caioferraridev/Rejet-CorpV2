@@ -5,11 +5,9 @@
   min-height: 460px;
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--color-border-soft);
-  box-shadow: 0 12px 30px var(--color-shadow);
-  background: var(--color-surface);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  background: var(--panel);
 }
 
 .list {
@@ -28,6 +26,7 @@
   font-size: 20px;
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: -0.01em;
 }
 
 .convList {
@@ -46,16 +45,22 @@
   background: none;
   cursor: pointer;
   text-align: left;
-  transition: var(--transition);
-  border-bottom: 1px solid rgba(36, 49, 39, 0.05);
+  transition: background var(--transition-fast);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .convItem:hover {
-  background: rgba(116, 203, 227, 0.08);
+  background: var(--panel-sunken);
 }
 
-.convActive {
-  background: linear-gradient(135deg, rgba(168, 198, 134, 0.18), rgba(116, 203, 227, 0.14));
+.convItem:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: -2px;
+}
+
+.convActive,
+.convActive:hover {
+  background: var(--color-primary-soft);
 }
 
 .convBody {
@@ -125,7 +130,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--panel-soft);
 }
 
 .threadEmpty {
@@ -144,7 +149,7 @@
 
 .placeholderIcon {
   font-size: 44px;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .threadHeader {
@@ -153,7 +158,7 @@
   gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--panel);
 }
 
 .backBtn {
@@ -161,17 +166,17 @@
   height: 38px;
   border-radius: 50%;
   border: 1px solid var(--color-border);
-  background: var(--color-surface-strong);
+  background: var(--panel);
   color: var(--color-text);
   cursor: pointer;
   display: none;
   align-items: center;
   justify-content: center;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .backBtn:hover {
-  background: rgba(116, 203, 227, 0.12);
+  background: var(--panel-sunken);
 }
 
 .threadWho {
@@ -236,20 +241,20 @@
 .bubble {
   max-width: 72%;
   padding: 10px 14px;
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(36, 49, 39, 0.08);
+  border-radius: 16px;
+  box-shadow: var(--shadow-xs);
 }
 
 .mine .bubble {
   background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
   color: var(--color-text);
-  border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 5px;
 }
 
 .theirs .bubble {
-  background: var(--color-white);
+  background: var(--panel);
   border: 1px solid var(--color-border);
-  border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 5px;
 }
 
 .bubble p {
@@ -272,24 +277,24 @@
   gap: 10px;
   padding: 14px 18px;
   border-top: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--panel);
 }
 
 .composer input {
   flex: 1;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-pill);
   padding: 11px 16px;
   outline: none;
   font-size: 14px;
   color: var(--color-text);
-  background: var(--color-surface-strong);
-  transition: var(--transition);
+  background: var(--panel);
+  transition: var(--transition-fast);
 }
 
 .composer input:focus {
-  border-color: rgba(116, 203, 227, 0.55);
-  box-shadow: 0 0 0 4px rgba(116, 203, 227, 0.12);
+  border-color: var(--color-secondary-dark);
+  box-shadow: var(--ring);
 }
 
 .composer button {
@@ -304,12 +309,17 @@
   align-items: center;
   justify-content: center;
   font-size: 17px;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   flex-shrink: 0;
 }
 
 .composer button:hover:not(:disabled) {
-  transform: scale(1.06);
+  filter: brightness(0.96);
+}
+
+.composer button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
 }
 
 .composer button:disabled {
@@ -321,20 +331,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 11px 20px;
+  padding: 10px 20px;
   border-radius: var(--radius-pill);
   background: var(--color-primary);
   color: var(--color-text);
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
-  transition: var(--transition);
-  box-shadow: 0 10px 20px rgba(168, 198, 134, 0.24);
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .linkBtn:hover {
   background: var(--color-primary-dark);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 @media (max-width: 820px) {

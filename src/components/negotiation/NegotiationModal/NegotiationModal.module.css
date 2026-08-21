@@ -21,4 +21,12 @@
   .row {
     grid-template-columns: 1fr;
   }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
 }

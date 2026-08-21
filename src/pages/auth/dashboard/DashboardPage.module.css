@@ -4,6 +4,13 @@
   gap: 24px;
 }
 
+.page a:focus-visible,
+.page button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 .hero {
   display: flex;
   align-items: center;
@@ -16,6 +23,7 @@
   font-size: 26px;
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
 .date {
@@ -43,10 +51,11 @@
 }
 
 .statCard strong {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--color-text);
   line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .statCard span {
@@ -67,7 +76,7 @@
 
 .iconGreen {
   background: rgba(168, 198, 134, 0.22);
-  color: #4c673e;
+  color: var(--tone-green-strong);
 }
 
 .iconBlue {
@@ -77,7 +86,7 @@
 
 .iconOrange {
   background: rgba(230, 140, 50, 0.18);
-  color: #b56e1a;
+  color: var(--tone-orange-strong);
 }
 
 .iconRed {
@@ -87,7 +96,7 @@
 
 .iconYellow {
   background: rgba(224, 166, 58, 0.18);
-  color: #9a6b12;
+  color: var(--tone-yellow-strong);
 }
 
 .columns {
@@ -172,18 +181,19 @@
   align-items: center;
   gap: 10px;
   padding: 11px 14px;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   color: var(--color-text);
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
-  transition: var(--transition);
-  border: 1px solid rgba(36, 49, 39, 0.07);
-  background: rgba(255, 255, 255, 0.5);
+  transition: var(--transition-fast);
+  border: 1px solid var(--color-border);
+  background: var(--panel-soft);
 }
 
 .shortcut:hover {
-  background: rgba(116, 203, 227, 0.12);
+  background: var(--color-secondary-soft);
+  border-color: rgba(116, 203, 227, 0.35);
   color: var(--color-secondary-dark);
   transform: translateX(3px);
 }
@@ -211,7 +221,7 @@
   align-items: flex-start;
   gap: 12px;
   padding: 11px 0;
-  border-bottom: 1px solid rgba(36, 49, 39, 0.06);
+  border-bottom: 1px solid var(--color-border);
   position: relative;
 }
 
@@ -223,11 +233,12 @@
   width: 36px;
   height: 36px;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(168, 198, 134, 0.2);
+  background: var(--color-primary-soft);
+  color: var(--tone-green-strong);
   font-size: 16px;
 }
 
@@ -318,10 +329,14 @@
 
 .bar {
   width: 100%;
-  border-radius: 8px 8px 4px 4px;
+  border-radius: 8px 8px 3px 3px;
   background: linear-gradient(180deg, var(--color-secondary), var(--color-primary));
   min-height: 0;
   transition: height 0.4s ease;
+}
+
+.chartCol:hover .bar {
+  filter: brightness(0.95);
 }
 
 .barValue {
@@ -359,7 +374,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 0;
-  border-bottom: 1px solid rgba(36, 49, 39, 0.06);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .productRow:last-child {
@@ -399,10 +414,10 @@
 .productThumb {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
-  background: rgba(168, 198, 134, 0.18);
+  background: var(--color-primary-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -454,7 +469,7 @@
 .progressBar {
   height: 8px;
   border-radius: 999px;
-  background: rgba(36, 49, 39, 0.08);
+  background: var(--panel-sunken);
   overflow: hidden;
 }
 
@@ -493,7 +508,7 @@
 .statusBarTrack {
   height: 6px;
   border-radius: 999px;
-  background: rgba(36, 49, 39, 0.06);
+  background: var(--panel-sunken);
   overflow: hidden;
 }
 
@@ -533,14 +548,20 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(36, 49, 39, 0.06);
+  padding: 10px 8px;
+  margin: 0 -8px;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 10px;
   text-decoration: none;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .negoItem:hover {
-  background: rgba(116, 203, 227, 0.06);
+  background: var(--panel-sunken);
+}
+
+.negoItem:last-child {
+  border-bottom: none;
 }
 
 .negoInfo {
@@ -588,10 +609,11 @@
 }
 
 .activityDot {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
   flex-shrink: 0;
   margin-top: 6px;
 }
