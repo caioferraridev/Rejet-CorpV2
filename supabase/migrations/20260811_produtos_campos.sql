@@ -1,5 +1,5 @@
 -- =====================================================================
---  REJEC CORP — migration: campos novos de produto
+--  REJET CORP — migration: campos novos de produto
 -- =====================================================================
 
 alter table public.produtos

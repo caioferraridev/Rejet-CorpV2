@@ -49,7 +49,7 @@ export function printReport(title: string, content: HTMLElement | null) {
         </style>
       </head>
       <body>
-        <h1>Rejec Corp — ${title}</h1>
+        <h1>Rejet Corp — ${title}</h1>
         <p>Emitido em ${new Date().toLocaleString("pt-BR")}</p>
         <div>${content.innerHTML}</div>
       </body>

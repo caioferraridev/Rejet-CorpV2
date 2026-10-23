@@ -1,5 +1,5 @@
 -- =====================================================================
---  REJEC CORP — migration: increment_views (RPC seguro)
+--  REJET CORP — migration: increment_views (RPC seguro)
 --  Executar no SQL Editor do Supabase (em ordem).
 -- =====================================================================
 

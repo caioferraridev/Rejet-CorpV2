@@ -1,4 +1,4 @@
-const STORAGE_KEY = "rejec_dark_mode";
+const STORAGE_KEY = "rejet_dark_mode";
 
 export function isDarkMode(): boolean {
   return localStorage.getItem(STORAGE_KEY) === "true";

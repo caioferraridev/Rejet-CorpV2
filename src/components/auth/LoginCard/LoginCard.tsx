@@ -17,7 +17,7 @@ export default function LoginCard({
         <h2>Entrar na plataforma</h2>
 
         <p className={styles.subtitle}>
-          Acesse o ambiente empresarial da Rejec Corp.
+          Acesse o ambiente empresarial da Rejet Corp.
         </p>
 
         <div className={styles["input-box"]}>

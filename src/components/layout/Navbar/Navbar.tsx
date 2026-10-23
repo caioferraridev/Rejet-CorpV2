@@ -21,7 +21,7 @@ export default function Navbar({
 
           <div className="logo-text">
             <span className="logo-title">
-              Rejec Corp
+              Rejet Corp
             </span>
 
             <span className="logo-subtitle">

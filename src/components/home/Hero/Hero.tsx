@@ -26,7 +26,7 @@ export default function Hero({
         </h1>
 
         <p>
-          A Rejec Corp é uma plataforma marketplace voltada exclusivamente para
+          A Rejet Corp é uma plataforma marketplace voltada exclusivamente para
           empresas, conectando organizações que desejam vender, reaproveitar e
           dar destino inteligente aos seus restos produtivos com mais controle,
           clareza e sustentabilidade.

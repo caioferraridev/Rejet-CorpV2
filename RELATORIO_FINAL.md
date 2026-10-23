@@ -1,4 +1,4 @@
-# Relatório Final — Rejec Corp V2
+# Relatório Final — Rejet Corp V2
 
 **Data:** 17/08/2026
 **Autor:** opencode (big-pickle)
@@ -7,7 +7,7 @@
 
 ## Resumo
 
-Implementação e conclusão das fases 6–14 do projeto Rejec Corp V2, um marketplace B2B de economia circular. Todas as fases foram finalizadas com `npm run build` e `npm run lint` passando sem erros.
+Implementação e conclusão das fases 6–14 do projeto Rejet Corp V2, um marketplace B2B de economia circular. Todas as fases foram finalizadas com `npm run build` e `npm run lint` passando sem erros.
 
 ---
 
@@ -53,7 +53,7 @@ Implementação e conclusão das fases 6–14 do projeto Rejec Corp V2, um marke
 ### Fase 12 — Dark Mode
 - **Novo hook:** `useDarkMode.ts` com `isDarkMode()`, `setDarkMode()`, `applySavedDarkMode()`
 - Aplicado no `main.tsx` antes da renderização do React (evita flash)
-- Persistido no `localStorage` (`rejec_dark_mode`)
+- Persistido no `localStorage` (`rejet_dark_mode`)
 - Toggle na `ConfigPage` com aplicação imediata
 - Seletor de idioma removido da Config (não implementado)
 

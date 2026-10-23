@@ -153,7 +153,7 @@ export default function AppLayout() {
   return (
     <div className={styles.app}>
       <Sidebar
-        brand={{ title: "Rejec Corp", subtitle: "Economia Circular B2B" }}
+        brand={{ title: "Rejet Corp", subtitle: "Economia Circular B2B" }}
         items={sidebarItems}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}

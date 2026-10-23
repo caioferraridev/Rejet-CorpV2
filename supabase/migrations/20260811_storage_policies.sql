@@ -1,5 +1,5 @@
 -- =====================================================================
---  REJEC CORP — migration: Storage (bucket + policies)
+--  REJET CORP — migration: Storage (bucket + policies)
 --  Executar no SQL Editor do Supabase (como postgres/supabase_admin).
 -- =====================================================================
 

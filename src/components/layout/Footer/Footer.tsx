@@ -10,7 +10,7 @@ export default function Footer() {
 
             <div className={styles["logo-text"]}>
               <span className={styles["logo-title"]}>
-                Rejec Corp
+                Rejet Corp
               </span>
 
               <span className={styles["logo-subtitle"]}>
@@ -46,7 +46,7 @@ export default function Footer() {
           <div className={styles["footer-column"]}>
             <h4>Contato</h4>
 
-            <a href="#">contato@rejec.com</a>
+            <a href="#">contato@rejet.com</a>
             <a href="#">Atendimento corporativo</a>
             <a href="#">Brasil</a>
           </div>
@@ -55,7 +55,7 @@ export default function Footer() {
 
       <div className={styles["footer-bottom"]}>
         <p>
-          © 2026 Rejec Corp. Todos os direitos reservados.
+          © 2026 Rejet Corp. Todos os direitos reservados.
         </p>
       </div>
     </footer>

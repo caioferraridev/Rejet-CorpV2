@@ -53,7 +53,7 @@ export async function signUp(payload: SignUpPayload): Promise<SignUpResult> {
   }
 
   localStorage.setItem(
-    "rejec_pending_company",
+    "rejet_pending_company",
     JSON.stringify({
       id: data.user.id,
       company_name: payload.company_name,
@@ -103,7 +103,7 @@ export async function updateProfile(userId: string, input: CompanyInput) {
 }
 
 export async function signOut() {
-  localStorage.removeItem("rejec_pending_company");
+  localStorage.removeItem("rejet_pending_company");
   return supabase.auth.signOut();
 }
 

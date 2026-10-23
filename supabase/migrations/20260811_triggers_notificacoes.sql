@@ -1,5 +1,5 @@
 -- =====================================================================
---  REJEC CORP — migration: notificações + log de atividades automáticos
+--  REJET CORP — migration: notificações + log de atividades automáticos
 --  Triggers geram notificações e atividades reais no banco.
 -- =====================================================================
 

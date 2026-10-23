@@ -220,7 +220,7 @@ export default function AuthModal({ open, onClose, mode = "login" }: Props) {
 
           <p>
             {view === "login" && "Use seu acesso corporativo para entrar no sistema."}
-            {view === "register" && "Cadastre sua empresa na Rejec Corp."}
+            {view === "register" && "Cadastre sua empresa na Rejet Corp."}
             {view === "forgot" && "Enviaremos um link de redefinição para o seu e-mail."}
           </p>
         </div>

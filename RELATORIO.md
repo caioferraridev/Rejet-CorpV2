@@ -1,4 +1,4 @@
-# RELATÓRIO TÉCNICO — REJEC CORP V2
+# RELATÓRIO TÉCNICO — REJET CORP V2
 
 > Documento para análise de continuidade. Este relatório descreve o que já foi feito,
 > a arquitetura atual, problemas encontrados na revisão de código e um roadmap
@@ -9,7 +9,7 @@
 
 ## 1. VISÃO GERAL DO PROJETO
 
-**Rejec Corp** é um marketplace B2B de **economia circular**: empresas compram e
+**Rejet Corp** é um marketplace B2B de **economia circular**: empresas compram e
 vendem restos produtivos, sucatas e materiais recicláveis entre si. A plataforma
 inclui cadastro de produtos, busca/filtros, favoritos, negociação (interesse →
 em negociação → aceito → finalizado), chat entre empresas, notificações,

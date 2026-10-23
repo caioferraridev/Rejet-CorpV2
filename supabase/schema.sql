@@ -1,5 +1,5 @@
 -- =====================================================================
---  REJEC CORP — Marketplace B2B de economia circular
+--  REJET CORP — Marketplace B2B de economia circular
 --  Schema completo do Supabase (PostgreSQL)
 --  Execute este arquivo no SQL Editor do seu projeto Supabase.
 -- =====================================================================

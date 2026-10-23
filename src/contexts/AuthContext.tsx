@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accountBlocked, setAccountBlocked] = useState(false);
 
   const clearSession = useCallback(async () => {
-    localStorage.removeItem("rejec_pending_company");
+    localStorage.removeItem("rejet_pending_company");
     setProfile(null);
     setAccountBlocked(false);
     await supabase.auth.signOut();
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const company = await getCurrentCompany(id).catch(() => null);
 
     if (!company) {
-      const pending = localStorage.getItem("rejec_pending_company");
+      const pending = localStorage.getItem("rejet_pending_company");
       if (pending) {
         try {
           const parsed = JSON.parse(pending) as {
@@ -74,10 +74,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               segment: parsed.segment ?? null,
               description: parsed.description ?? null,
             });
-            localStorage.removeItem("rejec_pending_company");
+            localStorage.removeItem("rejet_pending_company");
           }
         } catch {
-          localStorage.removeItem("rejec_pending_company");
+          localStorage.removeItem("rejet_pending_company");
         }
       }
     }

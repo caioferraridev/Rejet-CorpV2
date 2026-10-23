@@ -1,5 +1,5 @@
 -- =====================================================================
---  REJEC CORP — migration: histórico de negociações
+--  REJET CORP — migration: histórico de negociações
 -- =====================================================================
 
 create table if not exists public.negotiation_history (
