@@ -9,6 +9,7 @@ import {
 import type { User } from "@supabase/supabase-js";
 
 import { supabase } from "../services/supabase/client";
+import { createCompanyProfile } from "../services/auth/authService";
 import { getCurrentCompany } from "../services/companies/companyService";
 import type { Company } from "../types/company";
 
@@ -63,21 +64,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             description?: string;
           };
           if (parsed.id === id) {
-            await supabase.from("companies").upsert({
-              id,
-              company_name: parsed.company_name,
-              cnpj: parsed.cnpj,
-              email: parsed.email ?? null,
-              phone: parsed.phone ?? null,
-              city: parsed.city ?? null,
-              state: parsed.state ?? null,
-              segment: parsed.segment ?? null,
-              description: parsed.description ?? null,
-            });
-            localStorage.removeItem("rejet_pending_company");
+            const error = await createCompanyProfile(id, { ...parsed, email: parsed.email ?? "" });
+            if (!error) localStorage.removeItem("rejet_pending_company");
           }
         } catch {
           localStorage.removeItem("rejet_pending_company");
+        }
+      }
+      const { data } = await supabase.auth.getUser();
+      const account = data.user;
+      if (account?.id === id && account.email) {
+        const metadata = account.user_metadata;
+        if (typeof metadata.company_name === "string" && typeof metadata.cnpj === "string") {
+          const { company_name, cnpj, phone, city, state, segment, description } = metadata;
+          await createCompanyProfile(id, {
+            company_name,
+            cnpj,
+            email: account.email,
+            phone: typeof phone === "string" ? phone : undefined,
+            city: typeof city === "string" ? city : undefined,
+            state: typeof state === "string" ? state : undefined,
+            segment: typeof segment === "string" ? segment : undefined,
+            description: typeof description === "string" ? description : undefined,
+          });
         }
       }
     }
@@ -89,30 +98,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-      if (data.session?.user) {
-        refreshProfile(data.session.user.id);
-      }
-    });
+    let profileTimer: ReturnType<typeof setTimeout> | undefined;
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_, session) => {
+      clearTimeout(profileTimer);
       setUser(session?.user ?? null);
       if (session?.user) {
-        refreshProfile(session.user.id);
+        const id = session.user.id;
+        profileTimer = setTimeout(() => {
+          void refreshProfile(id).finally(() => {
+            if (active) setLoading(false);
+          });
+        }, 0);
       } else {
         setProfile(null);
         setAccountBlocked(false);
+        setLoading(false);
       }
     });
 
     return () => {
       active = false;
+      clearTimeout(profileTimer);
       subscription.unsubscribe();
     };
   }, [refreshProfile]);

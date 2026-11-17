@@ -24,32 +24,18 @@ export interface SignUpResult {
 }
 
 export async function signUp(payload: SignUpPayload): Promise<SignUpResult> {
+  const { password, email, ...company } = payload;
   const { data, error } = await supabase.auth.signUp({
-    email: payload.email,
-    password: payload.password,
-    options: {
-      data: {
-        company_name: payload.company_name,
-        cnpj: payload.cnpj,
-      },
-    },
+    email,
+    password,
+    options: { data: company, emailRedirectTo: window.location.origin },
   });
 
   if (error || !data.user) return { data, error, profileCreated: false };
 
-  let session = (await supabase.auth.getSession()).data.session;
-
-  if (!session) {
-    const { data: signInData } = await supabase.auth.signInWithPassword({
-      email: payload.email,
-      password: payload.password,
-    });
-    session = signInData.session;
-  }
-
-  if (session) {
-    await createCompanyProfile(session.user.id, payload);
-    return { data, error: null, profileCreated: true };
+  if (data.session) {
+    const profileError = await createCompanyProfile(data.user.id, payload);
+    return { data, error: profileError, profileCreated: !profileError };
   }
 
   localStorage.setItem(
@@ -89,7 +75,7 @@ export async function createCompanyProfile(
       segment: payload.segment ?? null,
       description: payload.description ?? null,
     },
-    { onConflict: "id" }
+    { onConflict: "id", ignoreDuplicates: true }
   );
   return error;
 }
